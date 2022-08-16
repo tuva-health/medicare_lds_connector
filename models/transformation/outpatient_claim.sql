@@ -149,4 +149,3 @@ select
 from {{ var('outpatient_base_claim')}} b
 inner join {{ var('outpatient_revenue_center')}} l
     on b.claim_no = l.claim_no
-limit 10
