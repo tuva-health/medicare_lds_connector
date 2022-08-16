@@ -11,7 +11,8 @@ with dual_status as(
   select 
     desy_sort_key 
     ,right(month,2) as month
-    ,REFERENCE_YEAR as year
+    ,reference_year as year
+
     ,dual_status as dual_status
   from {{ var('master_beneficiary_summary')}}
     unpivot(
