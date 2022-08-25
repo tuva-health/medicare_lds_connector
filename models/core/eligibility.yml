@@ -1,0 +1,8 @@
+version: 2
+
+models:
+    - name: eligibility
+      description: Member eligibility at the month grain
+      config:
+        database: "{{ var('output_database')}}"
+        schema: "{{ var('output_schema')}}"
