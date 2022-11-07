@@ -16,7 +16,7 @@ select
     ,cast(NULL as varchar) as discharge_disposition_code
     ,cast(l.line_place_of_srvc_cd as varchar) as place_of_service_code
     ,cast(NULL as varchar) as bill_type_code
-    ,cast(NULL as varchar) as ms_drg
+    ,cast(NULL as varchar) as ms_drg_code
     ,cast(NULL as varchar) as revenue_center_code
     ,cast(l.line_srvc_cnt as int) as service_unit_quantity
     ,cast(l.hcpcs_cd as varchar) as hcpcs_code
