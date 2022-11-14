@@ -1,3 +1,15 @@
+-----------------------------------------------------------------------------------------------------------------
+-- Author       Thu Xuan Vu
+-- Created      August 2022
+-- Purpose      Combine base (header) and line files
+-- Notes        Claim ID is not unique across claim types.  Concatenating original claim ID, claim year,
+--                and claim type.
+--              Payment is provided at the header level only.  Populating on line number 1 to avoid duplication.
+-----------------------------------------------------------------------------------------------------------------
+-- Modification History
+--
+-----------------------------------------------------------------------------------------------------------------
+
 with header_payment as(
     select
         cast(claim_no || date_part(year,date(clm_thru_dt,'yyyymmdd')) || nch_clm_type_cd as varchar) as claim_id
