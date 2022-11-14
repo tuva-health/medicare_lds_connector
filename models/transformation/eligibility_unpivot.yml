@@ -1,0 +1,11 @@
+version: 2
+
+models:
+    - name: eligibility_unpivot
+      description: >
+        Transformation model to unpivot the Master Beneficiary Summary File 
+        on DUAL_STUS_CD and MDCR_STATUS_CODE creating a row for each year/month 
+        of eligibility.
+      config:
+        database: "{{ var('output_database')}}"
+        schema: "{{ var('output_schema')}}"

@@ -1,93 +1,174 @@
------------------------------------------------------------------------------------------------------------------
--- Author       Thu Xuan Vu
--- Created      August 2022
--- Purpose      Create eligibility file at the month grain.
------------------------------------------------------------------------------------------------------------------
--- Modification History
---
------------------------------------------------------------------------------------------------------------------
+/*
+  This model takes in eligibility data on the member month grain and converts
+  it to enrollment date spans using row number, lag, and Medicare/Dual Status
+  to account for continuous enrollment and gaps in coverage.
+*/
 
-with dual_status as(
-  select 
-    desy_sort_key 
-    ,right(month,2) as month
-    ,reference_year as year
+with eligibility_unpivot as (
 
-    ,dual_status as dual_status
-  from {{ var('master_beneficiary_summary')}}
-    unpivot(
-            dual_status for month in (DUAL_STUS_CD_01
-                                      ,DUAL_STUS_CD_02
-                                      ,DUAL_STUS_CD_03
-                                      ,DUAL_STUS_CD_04
-                                      ,DUAL_STUS_CD_05
-                                      ,DUAL_STUS_CD_06
-                                      ,DUAL_STUS_CD_07
-                                      ,DUAL_STUS_CD_08
-                                      ,DUAL_STUS_CD_09
-                                      ,DUAL_STUS_CD_10
-                                      ,DUAL_STUS_CD_11
-                                      ,DUAL_STUS_CD_12)
-            )p1
+    select *
+         , to_date(year_month, 'YYYYMM') as enrollment_date
+         , cast(year as int) - cast(age as int) as birth_year
+    from {{ ref('eligibility_unpivot') }}
+
+),
+
+medicare_state_fips as (
+
+    select * from {{ ref('medicare_state_fips') }}
+
+),
+
+add_row_num as (
+
+    select
+          desy_sort_key
+        , enrollment_date
+        , row_number() over (
+            partition by desy_sort_key
+            order by to_date(year_month, 'YYYYMM')
+          ) as row_num
+        , case
+            when medicare_status in (null, '00')
+            and dual_status in (null, '00', '99', 'NA') then 1
+            else 0
+          end as disenrolled_flag
+    from eligibility_unpivot
+
+),
+
+/*
+    remove member months where the patient was not enrolled medicare
+    and did not have dual medicaid status
+*/
+remove_disenrolled_months as (
+
+     select
+          desy_sort_key
+        , enrollment_date
+        , row_num
+        , disenrolled_flag
+    from add_row_num
+    where disenrolled_flag = 0
+
+),
+
+add_lag_enrollment as (
+
+    select
+          desy_sort_key
+        , enrollment_date
+        , row_num
+        , lag(enrollment_date) over (
+            partition by desy_sort_key
+            order by row_num
+          ) as lag_enrollment
+    from remove_disenrolled_months
+
+),
+
+calculate_lag_diff as (
+
+    select
+          desy_sort_key
+        , enrollment_date
+        , row_num
+        , lag_enrollment
+        , datediff(month, lag_enrollment, enrollment_date) as lag_diff
+    from add_lag_enrollment
+
+),
+
+calculate_gaps as (
+
+     select
+          desy_sort_key
+        , enrollment_date
+        , row_num
+        , lag_enrollment
+        , lag_diff
+        , case
+            when lag_diff > 1 then 1
+            else 0
+          end as gap_flag
+    from calculate_lag_diff
+
+),
+
+calculate_groups as (
+
+     select
+          desy_sort_key
+        , enrollment_date
+        , row_num
+        , gap_flag
+        , sum(gap_flag) over (
+            partition by desy_sort_key
+            order by row_num
+            rows between unbounded preceding and current row
+          ) as row_group
+    from calculate_gaps
+
+),
+
+enrollment_span as (
+
+    select
+          desy_sort_key
+        , row_group
+        , min(enrollment_date) as enrollment_start_date
+        , last_day(max(enrollment_date)) as enrollment_end_date
+    from calculate_groups
+    group by desy_sort_key, row_group
+
+),
+
+joined as (
+
+    select
+          cast(enrollment_span.desy_sort_key as varchar) as patient_id
+        , cast(NULL as varchar) as member_id
+        , cast(case eligibility_unpivot.sex_code
+               when '0' then 'unknown'
+               when '1' then 'male'
+               when '2' then 'female'
+          end as varchar) as gender
+        , cast(case eligibility_unpivot.race_code
+               when '0' then 'unknown'
+               when '1' then 'white'
+               when '2' then 'black'
+               when '3' then 'other'
+               when '4' then 'asian'
+               when '5' then 'hispanic'
+               when '6' then 'north american native'
+          end as varchar) as race
+        , to_date(cast(eligibility_unpivot.birth_year as varchar), 'YYYY') as birth_date
+        , to_date(eligibility_unpivot.date_of_death, 'YYYYMMDD') as death_date
+        , cast(case
+               when eligibility_unpivot.date_of_death is null then 0
+               else 1
+          end as int) as death_flag
+        , enrollment_span.enrollment_start_date
+        , enrollment_span.enrollment_end_date
+        , cast('medicare' as varchar) as payer
+        , cast('medicare' as varchar) as payer_type
+        , cast(eligibility_unpivot.dual_status as varchar) as dual_status_code
+        , cast(eligibility_unpivot.medicare_status as varchar) as medicare_status_code
+        , cast(NULL as varchar) as first_name
+        , cast(NULL as varchar) as last_name
+        , cast(NULL as varchar) as address
+        , cast(NULL as varchar) as city
+        , cast(medicare_state_fips.state as varchar) as state
+        , cast(NULL as varchar) as zip_code
+        , cast(NULL as varchar) as phone
+        , cast('saf' as varchar) as data_source
+    from enrollment_span
+         left join eligibility_unpivot
+            on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key
+            and enrollment_span.enrollment_end_date = eligibility_unpivot.enrollment_date
+         left join medicare_state_fips
+            on eligibility_unpivot.state_code = medicare_state_fips.fips_code
+
 )
-, medicare_status as(
-  select 
-    desy_sort_key 
-    ,right(month,2) as month
-    ,REFERENCE_YEAR as year
-    ,medicare_status
-  from {{ var('master_beneficiary_summary')}}
-    unpivot(
-            medicare_status for month in (MDCR_STATUS_CODE_01
-                                          ,MDCR_STATUS_CODE_02
-                                          ,MDCR_STATUS_CODE_03
-                                          ,MDCR_STATUS_CODE_04
-                                          ,MDCR_STATUS_CODE_05
-                                          ,MDCR_STATUS_CODE_06
-                                          ,MDCR_STATUS_CODE_07
-                                          ,MDCR_STATUS_CODE_08
-                                          ,MDCR_STATUS_CODE_09
-                                          ,MDCR_STATUS_CODE_10
-                                          ,MDCR_STATUS_CODE_11
-                                          ,MDCR_STATUS_CODE_12)
-            )p1
-)
 
-
-
-select
-  b.desy_sort_key as patient_id
-  ,case when SEX_CODE = 0 then 'unknown'
-         when SEX_CODE = 1 then 'male'
-         when SEX_CODE = 2 then 'female'
-  end as gender
-  ,date(b.REFERENCE_YEAR - b.AGE) as birth_date
-  ,case when RACE_CODE = 0 then 'unknown'
-         when RACE_CODE = 1 then 'white'
-         when RACE_CODE = 2 then 'black'
-         when RACE_CODE = 3 then 'other'
-         when RACE_CODE = 4 then 'asian'
-         when RACE_CODE = 5 then 'hispanic'
-         when RACE_CODE = 6 then 'north american native'
-  end as race
-  ,NULL as zip_code
-  ,f.state as state
-  ,case when DATE_OF_DEATH is not null then 1
-       else 0
-  end as deceased_flag
-  ,date(DATE_OF_DEATH) as death_date
-  ,'medicare' as payer
-  ,'medicare' as payer_type
-  ,d.dual_status as dual_status
-  ,m.medicare_status as medicare_status
-  ,cast(d.month as int) as month
-  ,cast(d.year as int) as year
-from {{ var('master_beneficiary_summary')}} b
-inner join dual_status d
-    on b.desy_sort_key = d.desy_sort_key
-left join medicare_status m
-    on d.desy_sort_key = m.desy_sort_key
-    and d.month = m.month
-    and d.year = m.year
-left join {{ ref('medicare_state_fips')}} f
-    on b.state_code = f.fips_code
+select * from joined
