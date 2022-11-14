@@ -1,8 +1,14 @@
-/*
-  This model takes in eligibility data on the member month grain and converts
-  it to enrollment date spans using row number, lag, and Medicare/Dual Status
-  to account for continuous enrollment and gaps in coverage.
-*/
+-----------------------------------------------------------------------------------------------------------------
+-- Author       Thu Xuan Vu
+-- Created      August 2022
+-- Purpose      Convert eligibility from member month to date span
+-----------------------------------------------------------------------------------------------------------------
+-- Modification History
+-- 11/2022 SM
+--    This model takes in eligibility data on the member month grain and converts
+--      it to enrollment date spans using row number, lag, and Medicare/Dual Status
+--      to account for continuous enrollment and gaps in coverage.
+-----------------------------------------------------------------------------------------------------------------
 
 with eligibility_unpivot as (
 
