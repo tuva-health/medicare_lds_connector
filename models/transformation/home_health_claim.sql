@@ -1,15 +1,3 @@
------------------------------------------------------------------------------------------------------------------
--- Author       Thu Xuan Vu
--- Created      August 2022
--- Purpose      Combine base (header) and line files
--- Notes        Claim ID is not unique across claim types.  Concatenating original claim ID, claim year,
---                and claim type.
------------------------------------------------------------------------------------------------------------------
--- Modification History
---
------------------------------------------------------------------------------------------------------------------
-
-
 select
     /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
     cast(b.claim_no || date_part(year,date(b.clm_thru_dt,'yyyymmdd')) || b.nch_clm_type_cd as varchar) as claim_id
