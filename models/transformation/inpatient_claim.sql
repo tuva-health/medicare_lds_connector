@@ -1,23 +1,23 @@
 with header_payment as(
     select
-        cast(claim_no || date_part(year,date(clm_thru_dt,'yyyymmdd')) || nch_clm_type_cd as varchar) as claim_id
+        cast(claim_no || date_part(year,{{ try_to_cast_date('clm_thru_dt', 'YYYYMMDD') }} ) || nch_clm_type_cd as varchar) as claim_id
         ,clm_pmt_amt
     from {{ var('inpatient_base_claim')}}
 ) 
 
 select 
     /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
-    cast(b.claim_no || date_part(year,date(b.clm_thru_dt,'yyyymmdd')) || b.nch_clm_type_cd as varchar) as claim_id
+    cast(b.claim_no || date_part(year,{{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} ) || b.nch_clm_type_cd as varchar) as claim_id
     ,cast(l.clm_line_num as varchar) as claim_line_number
     ,cast('institutional' as varchar) as claim_type
     ,cast(b.desy_sort_key as varchar) as patient_id
     ,cast(NULL as varchar) as member_id
-    ,try_to_date(b.clm_thru_dt,'yyyymmdd') as claim_start_date
-    ,try_to_date(b.clm_thru_dt,'yyyymmdd') as claim_end_date
-    ,try_to_date(l.clm_thru_dt,'yyyymmdd') as claim_line_start_date
-    ,try_to_date(l.clm_thru_dt,'yyyymmdd') as claim_line_end_date
-    ,try_to_date(b.clm_admsn_dt,'yyyymmdd') as admission_date
-    ,try_to_date(b.nch_bene_dschrg_dt,'yyyymmdd') as discharge_date
+    ,{{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
+    ,{{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    ,{{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_start_date
+    ,{{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
+    ,{{ try_to_cast_date('b.clm_admsn_dt', 'YYYYMMDD') }} as admission_date
+    ,{{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
     ,cast(b.clm_src_ip_admsn_cd as varchar) as admit_source_code
     ,cast(b.clm_ip_admsn_type_cd as varchar) as admit_type_code
     ,cast(b.ptnt_dschrg_stus_cd as varchar) as discharge_disposition_code
@@ -36,7 +36,7 @@ select
     ,cast(NULL as varchar) as billing_npi
     ,cast(b.org_npi_num as varchar) as facility_npi
     ,cast(NULL as varchar) as paid_date
-    ,cast(coalesce(p.clm_pmt_amt,0) as numeric(38,2)) as paid_amount
+    ,cast(coalesce(cast(p.clm_pmt_amt as numeric(38,2)),0) as numeric(38,2)) as paid_amount
     ,cast(NULL as float) as allowed_amount
     ,cast(l.rev_cntr_tot_chrg_amt as numeric(38,2)) as charge_amount
     ,cast('icd-10-cm' as varchar) as diagnosis_code_type
@@ -116,36 +116,36 @@ select
     ,cast(b.icd_prcdr_cd23 as varchar) as procedure_code_23
     ,cast(b.icd_prcdr_cd24 as varchar) as procedure_code_24
     ,cast(b.icd_prcdr_cd25 as varchar) as procedure_code_25
-    ,try_to_date(b.prcdr_dt1,'yyyymmdd') as procedure_date_1
-    ,try_to_date(b.prcdr_dt2,'yyyymmdd') as procedure_date_2
-    ,try_to_date(b.prcdr_dt3,'yyyymmdd') as procedure_date_3
-    ,try_to_date(b.prcdr_dt4,'yyyymmdd') as procedure_date_4
-    ,try_to_date(b.prcdr_dt5,'yyyymmdd') as procedure_date_5
-    ,try_to_date(b.prcdr_dt6,'yyyymmdd') as procedure_date_6
-    ,try_to_date(b.prcdr_dt7,'yyyymmdd') as procedure_date_7
-    ,try_to_date(b.prcdr_dt8,'yyyymmdd') as procedure_date_8
-    ,try_to_date(b.prcdr_dt9,'yyyymmdd') as procedure_date_9
-    ,try_to_date(b.prcdr_dt10,'yyyymmdd') as procedure_date_10
-    ,try_to_date(b.prcdr_dt11,'yyyymmdd') as procedure_date_11
-    ,try_to_date(b.prcdr_dt12,'yyyymmdd') as procedure_date_12
-    ,try_to_date(b.prcdr_dt13,'yyyymmdd') as procedure_date_13
-    ,try_to_date(b.prcdr_dt14,'yyyymmdd') as procedure_date_14
-    ,try_to_date(b.prcdr_dt15,'yyyymmdd') as procedure_date_15
-    ,try_to_date(b.prcdr_dt16,'yyyymmdd') as procedure_date_16
-    ,try_to_date(b.prcdr_dt17,'yyyymmdd') as procedure_date_17
-    ,try_to_date(b.prcdr_dt18,'yyyymmdd') as procedure_date_18
-    ,try_to_date(b.prcdr_dt19,'yyyymmdd') as procedure_date_19
-    ,try_to_date(b.prcdr_dt20,'yyyymmdd') as procedure_date_20
-    ,try_to_date(b.prcdr_dt21,'yyyymmdd') as procedure_date_21
-    ,try_to_date(b.prcdr_dt22,'yyyymmdd') as procedure_date_22
-    ,try_to_date(b.prcdr_dt23,'yyyymmdd') as procedure_date_23
-    ,try_to_date(b.prcdr_dt24,'yyyymmdd') as procedure_date_24
-    ,try_to_date(b.prcdr_dt25,'yyyymmdd') as procedure_date_25
+    ,{{ try_to_cast_date('b.prcdr_dt1', 'YYYYMMDD') }} as procedure_date_1
+    ,{{ try_to_cast_date('b.prcdr_dt2', 'YYYYMMDD') }} as procedure_date_2
+    ,{{ try_to_cast_date('b.prcdr_dt3', 'YYYYMMDD') }} as procedure_date_3
+    ,{{ try_to_cast_date('b.prcdr_dt4', 'YYYYMMDD') }} as procedure_date_4
+    ,{{ try_to_cast_date('b.prcdr_dt5', 'YYYYMMDD') }} as procedure_date_5
+    ,{{ try_to_cast_date('b.prcdr_dt6', 'YYYYMMDD') }} as procedure_date_6
+    ,{{ try_to_cast_date('b.prcdr_dt7', 'YYYYMMDD') }} as procedure_date_7
+    ,{{ try_to_cast_date('b.prcdr_dt8', 'YYYYMMDD') }} as procedure_date_8
+    ,{{ try_to_cast_date('b.prcdr_dt9', 'YYYYMMDD') }} as procedure_date_9
+    ,{{ try_to_cast_date('b.prcdr_dt10', 'YYYYMMDD') }} as procedure_date_10
+    ,{{ try_to_cast_date('b.prcdr_dt11', 'YYYYMMDD') }} as procedure_date_11
+    ,{{ try_to_cast_date('b.prcdr_dt12', 'YYYYMMDD') }} as procedure_date_12
+    ,{{ try_to_cast_date('b.prcdr_dt13', 'YYYYMMDD') }} as procedure_date_13
+    ,{{ try_to_cast_date('b.prcdr_dt14', 'YYYYMMDD') }} as procedure_date_14
+    ,{{ try_to_cast_date('b.prcdr_dt15', 'YYYYMMDD') }} as procedure_date_15
+    ,{{ try_to_cast_date('b.prcdr_dt16', 'YYYYMMDD') }} as procedure_date_16
+    ,{{ try_to_cast_date('b.prcdr_dt17', 'YYYYMMDD') }} as procedure_date_17
+    ,{{ try_to_cast_date('b.prcdr_dt18', 'YYYYMMDD') }} as procedure_date_18
+    ,{{ try_to_cast_date('b.prcdr_dt19', 'YYYYMMDD') }} as procedure_date_19
+    ,{{ try_to_cast_date('b.prcdr_dt20', 'YYYYMMDD') }} as procedure_date_20
+    ,{{ try_to_cast_date('b.prcdr_dt21', 'YYYYMMDD') }} as procedure_date_21
+    ,{{ try_to_cast_date('b.prcdr_dt22', 'YYYYMMDD') }} as procedure_date_22
+    ,{{ try_to_cast_date('b.prcdr_dt23', 'YYYYMMDD') }} as procedure_date_23
+    ,{{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
+    ,{{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
     ,cast('saf' as varchar) as data_source
 from {{ var('inpatient_base_claim')}} b
 inner join {{ var('inpatient_revenue_center')}} l
     on b.claim_no = l.claim_no
 /* Payment is provided at the header level only.  Populating on line number 1 to avoid duplication. */
 left join header_payment p
-    on cast(b.claim_no || date_part(year,date(b.clm_thru_dt,'yyyymmdd')) || b.nch_clm_type_cd as varchar) = p.claim_id
+    on cast(b.claim_no || date_part(year,{{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} ) || b.nch_clm_type_cd as varchar) = p.claim_id
     and l.clm_line_num = 1

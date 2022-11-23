@@ -1,16 +1,16 @@
 select
     /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
-    cast(b.claim_no || date_part(year,date(b.clm_thru_dt,'yyyymmdd')) || b.nch_clm_type_cd as varchar) as claim_id
+    cast(b.claim_no || date_part(year,{{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} ) || b.nch_clm_type_cd as varchar) as claim_id
     ,cast(l.clm_line_num as int) as claim_line_number
     ,cast('institutional' as varchar) as claim_type
     ,cast(b.desy_sort_key as varchar) as patient_id
     ,cast(NULL as varchar) as member_id
-    ,try_to_date(b.clm_thru_dt,'yyyymmdd') as claim_start_date
-    ,try_to_date(b.clm_thru_dt,'yyyymmdd') as claim_end_date
-    ,try_to_date(l.rev_cntr_dt,'yyyymmdd') as claim_line_start_date
-    ,try_to_date(l.rev_cntr_dt,'yyyymmdd') as claim_line_end_date
-    ,try_to_date(b.clm_admsn_dt,'yyyymmdd') as admission_date
-    ,try_to_date(b.nch_bene_dschrg_dt,'yyyymmdd') as discharge_date
+    ,{{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
+    ,{{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    ,{{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_start_date
+    ,{{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
+    ,{{ try_to_cast_date('b.clm_admsn_dt', 'YYYYMMDD') }} as admission_date
+    ,{{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
     ,cast(NULL as varchar) as admit_source_code
     ,cast(NULL as varchar) as admit_type_code
     ,cast(NULL as varchar) as discharge_disposition_code
