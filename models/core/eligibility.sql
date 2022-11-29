@@ -8,7 +8,7 @@ with eligibility_unpivot as (
 
     select *
          , to_date(year_month, 'YYYYMM') as enrollment_date
-         , cast(year as int) - cast(age as int) as birth_year
+         , cast(year as integer) - cast(age as integer) as birth_year
     from {{ ref('eligibility_unpivot') }}
 
 ),
@@ -126,14 +126,14 @@ enrollment_span as (
 joined as (
 
     select
-          cast(enrollment_span.desy_sort_key as varchar) as patient_id
-        , cast(NULL as varchar) as member_id
-        , cast(case eligibility_unpivot.sex_code
+          {{ cast_string_or_varchar('enrollment_span.desy_sort_key') }} as patient_id
+        , {{ cast_string_or_varchar('NULL') }} as member_id
+        , case eligibility_unpivot.sex_code
                when '0' then 'unknown'
                when '1' then 'male'
                when '2' then 'female'
-          end as varchar) as gender
-        , cast(case eligibility_unpivot.race_code
+          end as gender
+        , case eligibility_unpivot.race_code
                when '0' then 'unknown'
                when '1' then 'white'
                when '2' then 'black'
@@ -141,27 +141,27 @@ joined as (
                when '4' then 'asian'
                when '5' then 'hispanic'
                when '6' then 'north american native'
-          end as varchar) as race
-        , to_date(cast(eligibility_unpivot.birth_year as varchar), 'YYYY') as birth_date
+          end as race
+        , to_date({{ cast_string_or_varchar('eligibility_unpivot.birth_year') }}, 'YYYY') as birth_date
         , to_date(eligibility_unpivot.date_of_death, 'YYYYMMDD') as death_date
         , cast(case
                when eligibility_unpivot.date_of_death is null then 0
                else 1
-          end as int) as death_flag
+          end as integer) as death_flag
         , enrollment_span.enrollment_start_date
         , enrollment_span.enrollment_end_date
-        , cast('medicare' as varchar) as payer
-        , cast('medicare' as varchar) as payer_type
-        , cast(eligibility_unpivot.dual_status as varchar) as dual_status_code
-        , cast(eligibility_unpivot.medicare_status as varchar) as medicare_status_code
-        , cast(NULL as varchar) as first_name
-        , cast(NULL as varchar) as last_name
-        , cast(NULL as varchar) as address
-        , cast(NULL as varchar) as city
-        , cast(medicare_state_fips.state as varchar) as state
-        , cast(NULL as varchar) as zip_code
-        , cast(NULL as varchar) as phone
-        , cast('saf' as varchar) as data_source
+        , 'medicare' as payer
+        , 'medicare' as payer_type
+        , {{ cast_string_or_varchar('eligibility_unpivot.dual_status') }} as dual_status_code
+        , {{ cast_string_or_varchar('eligibility_unpivot.medicare_status') }} as medicare_status_code
+        , {{ cast_string_or_varchar('NULL') }} as first_name
+        , {{ cast_string_or_varchar('NULL') }} as last_name
+        , {{ cast_string_or_varchar('NULL') }} as address
+        , {{ cast_string_or_varchar('NULL') }} as city
+        , {{ cast_string_or_varchar('medicare_state_fips.state') }} as state
+        , {{ cast_string_or_varchar('NULL') }} as zip_code
+        , {{ cast_string_or_varchar('NULL') }} as phone
+        , 'saf' as data_source
     from enrollment_span
          left join eligibility_unpivot
             on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key
