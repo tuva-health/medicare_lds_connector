@@ -12,7 +12,7 @@ select
         || {{ cast_string_or_varchar('b.clm_thru_dt_year') }}
         || {{ cast_string_or_varchar('b.nch_clm_type_cd') }}
       as claim_id
-    , {{ cast_string_or_varchar('l.line_num') }} as claim_line_number
+    , cast(l.line_num as integer) as claim_line_number
     , 'professional' as claim_type
     , {{ cast_string_or_varchar('b.desy_sort_key') }} as patient_id
     , {{ cast_string_or_varchar('NULL') }} as member_id
@@ -29,7 +29,7 @@ select
     , {{ cast_string_or_varchar('NULL') }} as bill_type_code
     , {{ cast_string_or_varchar('NULL') }} as ms_drg_code
     , {{ cast_string_or_varchar('NULL') }} as revenue_center_code
-    , {{ cast_string_or_varchar('l.line_srvc_cnt') }} as service_unit_quantity
+    , cast(regexp_substr(l.line_srvc_cnt,'.') as integer) as service_unit_quantity
     , {{ cast_string_or_varchar('l.hcpcs_cd') }} as hcpcs_code
     , {{ cast_string_or_varchar('l.hcpcs_1st_mdfr_cd') }} as hcpcs_modifier_1
     , {{ cast_string_or_varchar('l.hcpcs_2nd_mdfr_cd') }} as hcpcs_modifier_2
@@ -39,7 +39,7 @@ select
     , {{ cast_string_or_varchar('l.prf_physn_npi') }} as rendering_npi
     , {{ cast_string_or_varchar('NULL') }} as billing_npi
     , {{ cast_string_or_varchar('l.org_npi_num') }} as facility_npi
-    , {{ cast_string_or_varchar('NULL') }} as paid_date
+    , date(NULL) as paid_date
     , {{ cast_numeric('l.line_nch_pmt_amt') }} as paid_amount
     , {{ cast_numeric('l.line_alowd_chrg_amt') }} as allowed_amount
     , {{ cast_numeric('l.line_alowd_chrg_amt') }} as charge_amount
