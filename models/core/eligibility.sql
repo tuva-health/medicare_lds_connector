@@ -117,7 +117,8 @@ enrollment_span as (
           desy_sort_key
         , row_group
         , min(enrollment_date) as enrollment_start_date
-        , last_day(max(enrollment_date)) as enrollment_end_date
+        , max(enrollment_date) as enrollment_end_date_max
+        , last_day(max(enrollment_date)) as enrollment_end_date_last
     from calculate_groups
     group by desy_sort_key, row_group
 
@@ -149,7 +150,7 @@ joined as (
                else 1
           end as integer) as death_flag
         , enrollment_span.enrollment_start_date
-        , enrollment_span.enrollment_end_date
+        , enrollment_span.enrollment_end_date_last as enrollment_end_date
         , 'medicare' as payer
         , 'medicare' as payer_type
         , {{ cast_string_or_varchar('eligibility_unpivot.dual_status') }} as dual_status_code
@@ -165,7 +166,7 @@ joined as (
     from enrollment_span
          left join eligibility_unpivot
             on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key
-            and enrollment_span.enrollment_end_date = eligibility_unpivot.enrollment_date
+            and enrollment_span.enrollment_end_date_max = eligibility_unpivot.enrollment_date
          left join medicare_state_fips
             on eligibility_unpivot.state_code = medicare_state_fips.fips_code
 
