@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: saf
+    database: "{{ var('input_database') }}"
+    schema:  "{{ var('input_schema') }}"
+    tables:
+      - name: carrier_base_claim
+      - name: carrier_claim_line
+      - name: dme_base_claim
+      - name: dme_claim_line
+      - name: hha_base_claim
+      - name: hha_revenue_center
+      - name: hospice_base_claim
+      - name: hospice_revenue_center
+      - name: inpatient_base_claim
+      - name: inpatient_revenue_center
+      - name: master_beneficiary_summary
+      - name: outpatient_base_claim
+      - name: outpatient_revenue_center
+      - name: snf_base_claim
+      - name: snf_revenue_center
