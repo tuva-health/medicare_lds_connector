@@ -1,7 +1,7 @@
 with dme_base_claim as (
 
     select *
-         , date_part(year, {{ try_to_cast_date('clm_thru_dt', 'YYYYMMDD') }} ) as clm_thru_dt_year
+         , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
     from {{ var('dme_base_claim') }}
 
 )
@@ -43,8 +43,8 @@ select
     , {{ cast_numeric('l.line_nch_pmt_amt') }} as paid_amount
     , {{ cast_numeric('l.line_alowd_chrg_amt') }} as allowed_amount
     , {{ cast_numeric('l.line_alowd_chrg_amt') }} as charge_amount
-    , case when b.prncpal_dgns_vrsn_cd = 0 then 'icd-10-cm'
-           when b.prncpal_dgns_vrsn_cd = 9 then 'icd-9-cm'
+    , case when b.prncpal_dgns_vrsn_cd = '0' then 'icd-10-cm'
+           when b.prncpal_dgns_vrsn_cd = '9' then 'icd-9-cm'
            when b.prncpal_dgns_vrsn_cd is null then 'icd-9-cm'
       end as diagnosis_code_type
     , {{ cast_string_or_varchar('b.prncpal_dgns_cd') }} as diagnosis_code_1

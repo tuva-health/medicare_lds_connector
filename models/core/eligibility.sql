@@ -7,7 +7,7 @@
 with eligibility_unpivot as (
 
     select *
-         , to_date(year_month, 'YYYYMM') as enrollment_date
+         , {{ to_date('year_month', 'YYYYMM') }} as enrollment_date
          , cast(year as integer) - cast(age as integer) as birth_year
     from {{ ref('eligibility_unpivot') }}
 
@@ -26,7 +26,7 @@ add_row_num as (
         , enrollment_date
         , row_number() over (
             partition by desy_sort_key
-            order by to_date(year_month, 'YYYYMM')
+            order by enrollment_date
           ) as row_num
         , case
             when medicare_status in (null, '00')
@@ -74,7 +74,7 @@ calculate_lag_diff as (
         , enrollment_date
         , row_num
         , lag_enrollment
-        , datediff(month, lag_enrollment, enrollment_date) as lag_diff
+        , {{ datediff('lag_enrollment', 'enrollment_date', 'month') }} as lag_diff
     from add_lag_enrollment
 
 ),
@@ -143,8 +143,8 @@ joined as (
                when '5' then 'hispanic'
                when '6' then 'north american native'
           end as race
-        , to_date({{ cast_string_or_varchar('eligibility_unpivot.birth_year') }}, 'YYYY') as birth_date
-        , to_date(eligibility_unpivot.date_of_death, 'YYYYMMDD') as death_date
+        , {{ to_date('eligibility_unpivot.birth_year', 'YYYY') }} as birth_date
+        , {{ to_date('eligibility_unpivot.date_of_death', 'YYYYMMDD') }} as death_date
         , cast(case
                when eligibility_unpivot.date_of_death is null then 0
                else 1

@@ -1,7 +1,7 @@
 with inpatient_base_claim as (
 
     select *
-         , date_part(year, {{ try_to_cast_date('clm_thru_dt', 'YYYYMMDD') }} ) as clm_thru_dt_year
+         , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
     from {{ var('inpatient_base_claim') }}
 
 ),
@@ -176,4 +176,4 @@ inner join {{ var('inpatient_revenue_center') }} as l
 /* Payment is provided at the header level only.  Populating on line number 1 to avoid duplication. */
 left join header_payment p
     on b.claim_id = p.claim_id
-    and l.clm_line_num = 1
+    and l.clm_line_num = '1'

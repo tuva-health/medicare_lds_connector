@@ -1,7 +1,7 @@
 with hha_base_claim as (
 
     select *
-         , date_part(year, {{ try_to_cast_date('clm_thru_dt', 'YYYYMMDD') }} ) as clm_thru_dt_year
+         , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
     from {{ var('hha_base_claim') }}
 
 )
