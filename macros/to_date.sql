@@ -23,18 +23,18 @@
 
 {%- macro default__to_date(column_name, date_format) %}
 
-    to_date( {{ cast_string_or_varchar(column_name) }}, {{ date_format }} )
+    to_date( {{ cast_string_or_varchar(column_name) }}, '{{ date_format }}' )
 
 {%- endmacro -%}
 
 {%- macro redshift__to_date(column_name, date_format) -%}
 
-    to_date( {{ cast_string_or_varchar(column_name) }}, {{ date_format }} )
+    to_date( {{ cast_string_or_varchar(column_name) }}, '{{ date_format }}' )
 
 {%- endmacro -%}
 
 {%- macro snowflake__to_date(column_name, date_format) %}
 
-    to_date( {{ cast_string_or_varchar(column_name) }}, {{ date_format }} )
+    to_date( {{ cast_string_or_varchar(column_name) }}, '{{ date_format }}' )
 
 {%- endmacro -%}
