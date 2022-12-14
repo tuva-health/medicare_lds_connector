@@ -16,18 +16,18 @@
 
 {%- macro default__date_trunc(column_name, date_format, date_part) %}
 
-    date_trunc( {{ date_part }}, {{ try_to_cast_date(column_name, date_format) }} )
+    date_trunc( '{{ date_part }}', {{ try_to_cast_date(column_name, date_format) }} )
 
 {%- endmacro -%}
 
 {%- macro redshift__date_trunc(column_name, date_format, date_part) -%}
 
-    date_trunc( {{ date_part }}, {{ try_to_cast_date(column_name, date_format) }} )
+    date_trunc( '{{ date_part }}', {{ try_to_cast_date(column_name, date_format) }} )
 
 {%- endmacro -%}
 
 {%- macro snowflake__date_trunc(column_name, date_format, date_part) %}
 
-    date_trunc( {{ date_part }}, {{ try_to_cast_date(column_name, date_format) }} )
+    date_trunc( '{{ date_part }}', {{ try_to_cast_date(column_name, date_format) }} )
 
 {%- endmacro -%}
