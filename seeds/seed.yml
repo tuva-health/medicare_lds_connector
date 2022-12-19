@@ -7,4 +7,5 @@ seeds:
       schema:  "{{ var('output_schema')}}"
       tags: terminology
       column_types:
-        fips_code: varchar(2)
+        fips_code:  |
+          {%- if target.type == "bigquery" -%} string {%- else -%} varchar {%- endif -%}

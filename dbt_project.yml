@@ -6,9 +6,6 @@ config-version: 2
 profile: 'default'                      # configuration required
 
 vars:
-  source_name: saf                      # configuration required
-                                        # name describing the dataset feeding this project
-
   input_database: medicare_lds_saf      # configuration required
                                         # name of the database where sources feeding this project are stored
 
@@ -21,21 +18,21 @@ vars:
   output_schema: claims_input           # configuration required
                                         # name of the schema where output of this project should be written
 
-  carrier_base_claim: "{{ source(var('source_name'),'carrier_base_claim') }}"  
-  carrier_claim_line: "{{ source(var('source_name'),'carrier_claim_line') }}"  
-  dme_base_claim: "{{ source(var('source_name'),'dme_base_claim') }}"
-  dme_claim_line: "{{ source(var('source_name'),'dme_claim_line') }}"
-  hha_base_claim: "{{ source(var('source_name'),'hha_base_claim') }}"
-  hha_revenue_center: "{{ source(var('source_name'),'hha_revenue_center') }}"
-  hospice_base_claim: "{{ source(var('source_name'),'hospice_base_claim') }}"
-  hospice_revenue_center: "{{ source(var('source_name'),'hospice_revenue_center') }}"
-  inpatient_base_claim: "{{ source(var('source_name'),'inpatient_base_claim') }}"
-  inpatient_revenue_center: "{{ source(var('source_name'),'inpatient_revenue_center') }}"
-  master_beneficiary_summary: "{{ source(var('source_name'),'master_beneficiary_summary') }}"
-  outpatient_base_claim: "{{ source(var('source_name'),'outpatient_base_claim') }}"
-  outpatient_revenue_center: "{{ source(var('source_name'),'outpatient_revenue_center') }}"
-  snf_base_claim: "{{ source(var('source_name'),'snf_base_claim') }}"
-  snf_revenue_center: "{{ source(var('source_name'),'snf_revenue_center') }}"
+  carrier_base_claim: "{{ source('saf','carrier_base_claim') }}"
+  carrier_claim_line: "{{ source('saf','carrier_claim_line') }}"
+  dme_base_claim: "{{ source('saf','dme_base_claim') }}"
+  dme_claim_line: "{{ source('saf','dme_claim_line') }}"
+  hha_base_claim: "{{ source('saf','hha_base_claim') }}"
+  hha_revenue_center: "{{ source('saf','hha_revenue_center') }}"
+  hospice_base_claim: "{{ source('saf','hospice_base_claim') }}"
+  hospice_revenue_center: "{{ source('saf','hospice_revenue_center') }}"
+  inpatient_base_claim: "{{ source('saf','inpatient_base_claim') }}"
+  inpatient_revenue_center: "{{ source('saf','inpatient_revenue_center') }}"
+  master_beneficiary_summary: "{{ source('saf','master_beneficiary_summary') }}"
+  outpatient_base_claim: "{{ source('saf','outpatient_base_claim') }}"
+  outpatient_revenue_center: "{{ source('saf','outpatient_revenue_center') }}"
+  snf_base_claim: "{{ source('saf','snf_base_claim') }}"
+  snf_revenue_center: "{{ source('saf','snf_revenue_center') }}"
 
 # These configurations specify where dbt should look for different types of files.
 # The `source-paths` config, for example, states that models in this project can be
