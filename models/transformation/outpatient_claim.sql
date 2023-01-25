@@ -3,7 +3,7 @@ with outpatient_base_claim as (
     select *
          , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
     from {{ var('outpatient_base_claim') }}
-
+limit 1000
 )
 
 select
@@ -16,8 +16,11 @@ select
     , 'institutional' as claim_type
     , {{ cast_string_or_varchar('b.desy_sort_key') }} as patient_id
     , {{ cast_string_or_varchar('NULL') }} as member_id
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    -- , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
+    -- , cast(substr(b.clm_admsn_dt,0,4) || '-' || substr(b.clm_admsn_dt,5,2) || '-' || substr(b.clm_admsn_dt,7,2) as date) as claim_start_date
+    , date(null) as claim_start_date
+    -- , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    , cast(substr(b.clm_thru_dt,0,4) || '-' || substr(b.clm_thru_dt,5,2) || '-' || substr(b.clm_thru_dt,7,2) as date) as claim_end_date
     , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_start_date
     , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_end_date
     , date(NULL) as admission_date
@@ -152,3 +155,4 @@ select
 from outpatient_base_claim as b
 inner join {{ var('outpatient_revenue_center') }} as l
     on b.claim_no = l.claim_no
+limit 1000

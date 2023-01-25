@@ -3,7 +3,7 @@ with hospice_base_claim as (
     select *
          , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
     from {{ var('hospice_base_claim') }}
-
+limit 1000
 )
 
 select
@@ -16,12 +16,18 @@ select
     , 'institutional' as claim_type
     , {{ cast_string_or_varchar('b.desy_sort_key') }} as patient_id
     , {{ cast_string_or_varchar('NULL') }} as member_id
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    -- , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
+    -- , cast(substr(b.clm_admsn_dt,0,4) || '-' || substr(b.clm_admsn_dt,5,2) || '-' || substr(b.clm_admsn_dt,7,2) as date) as claim_start_date
+    , null as claim_start_date
+    -- , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    , cast(substr(b.clm_thru_dt,0,4) || '-' || substr(b.clm_thru_dt,5,2) || '-' || substr(b.clm_thru_dt,7,2) as date) as claim_end_date
     , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_start_date
     , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
-    , {{ try_to_cast_date('b.clm_hospc_start_dt_id', 'YYYYMMDD') }} as admission_date
-    , {{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
+    -- , {{ try_to_cast_date('b.clm_hospc_start_dt_id', 'YYYYMMDD') }} as admission_date
+    -- , cast(substr(b.clm_admsn_dt,0,4) || '-' || substr(b.clm_admsn_dt,5,2) || '-' || substr(b.clm_admsn_dt,7,2) as date) as admission_date
+    , null as admission_date
+    -- , {{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
+    , cast(substr(b.nch_bene_dschrg_dt,0,4) || '-' || substr(b.nch_bene_dschrg_dt,5,2) || '-' || substr(b.nch_bene_dschrg_dt,7,2) as date) as discharge_date
     , {{ cast_string_or_varchar('NULL') }} as admit_source_code
     , {{ cast_string_or_varchar('NULL') }} as admit_type_code
     , {{ cast_string_or_varchar('NULL') }} as discharge_disposition_code
@@ -152,4 +158,4 @@ select
 from hospice_base_claim as b
 inner join {{ var('hospice_revenue_center') }} as l
     on b.claim_no = l.claim_no
-
+limit 1000

@@ -1,7 +1,7 @@
 with demographics as (
 
     select * from {{ var('master_beneficiary_summary')}}
-
+    limit 1000
 ),
 
 unpivot_dual_status as (
@@ -80,3 +80,4 @@ from demographics
          on unpivot_dual_status.desy_sort_key = unpivot_medicare_status.desy_sort_key
          and unpivot_dual_status.month = unpivot_medicare_status.month
          and unpivot_dual_status.year = unpivot_medicare_status.year
+limit 1000

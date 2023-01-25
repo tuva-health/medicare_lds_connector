@@ -3,6 +3,7 @@ with carrier_base_claim as (
     select *
          , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
     from {{ var('carrier_base_claim') }}
+    limit 1000
 
 )
 
@@ -152,3 +153,4 @@ select
 from carrier_base_claim as b
 inner join {{ var('carrier_claim_line') }} as l
     on b.claim_no = l.claim_no
+limit 1000

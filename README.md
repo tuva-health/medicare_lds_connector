@@ -1,51 +1,54 @@
 [![Apache License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) ![dbt logo and version](https://img.shields.io/static/v1?logo=dbt&label=dbt-version&message=1.x&color=orange)
 
-# Medicare SAF Claims Connector
+# Medicare SAF Connector
+
+## 🔗  Quick Links
+- [Docs](https://tuva-health.github.io/the_tuva_project/#!/overview): Learn about the Tuva Project data model
+- [Knowledge Base](https://thetuvaproject.com/docs/intro): Learn about claims data fundamentals and how to do claims data analytics
+<br/><br/>
 
 ## 🧰 What does this project do?
 
-This connector transforms raw Medicare SAF claims data into the Tuva Claims Input Layer which enables you to run most of the other components of the Tuva Project with very little effort.
-For a detailed overview of what the project does and how it works, check out our [Knowledge Base](https://thetuvaproject.com/docs/getting-started). 
-For information on data models and to view the entire DAG check out our dbt [Docs](https://tuva-health.github.io/medicare_saf_connector/#!/overview?g_v=1).
+This connector is a dbt project that runs the Tuva Project on the Medicare SAF claims data, including mapping raw Medicare SAF claims to the Tuva Claims Data Model (CDM), loading all terminology sets, and running all data marts.
+
+You can read more about Medicare SAF claims data [here](https://www.cms.gov/Research-Statistics-Data-and-Systems/Files-for-Order/LimitedDataSets/StandardAnalyticalFiles).
+<br/><br/>
 
 ## 🔌 Database Support
 
 - BigQuery
 - Redshift
 - Snowflake
+<br/><br/>
 
-## ✅ How to get started
+## ✅ Quick Start Instructions
 
-### Pre-requisites
-1. You have Medicare SAF claims data loaded into a data warehouse.
-2. You have [dbt](https://www.getdbt.com/) installed and configured (i.e. connected to your data warehouse).
+1. Fork or clone this repo to your local machine or environment.
 
-[Here](https://docs.getdbt.com/dbt-cli/installation) are instructions for installing dbt.
+2. Update the dbt_project.yml file to connect to your data warehouse and point to the database, schema, and tables where your Medicare SAF data is stored.
 
-### Getting Started
-Complete the following steps to configure the package to run in your environment.
+3. Execute `dbt build` from the command line to execute the entire project.
+<br/><br/>
 
-1. [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) this repo to your local machine or environment.
-2. Update the dbt_project.yml file to use the dbt profile connected to your data warehouse.
-3. Run `dbt build` command while specifying the specific database and schema locations you want to read/write data fromt/to: 
+## Medicare SAF Data Issues
+In this section we catalog important data quality issues present in the Medicare SAF data and how we've accounted for those issues in this connector.  This isn't an exhaustive inventory of every data issue.  Rather, we focus on notable issues that impact downstream analytics in the Tuva Project.
 
-    > dbt build --vars '{key: value, input_database: medicare, input_schema: saf, output_database: tuva, output_schema: claims_input}'
+- **Claim From Date:** The Medicare SAF data only includes Claim Thru Date, so we don't have a claim date of service start date.  For inpatient claims we've elected to map admission date to the claim_start_date in the Tuva Claims Data Model.
 
-Note: The source data table names need to match the table names in [sources.yml](models/sources.yml).  These table names match the [Medicare SAF data dictionary](https://www.cms.gov/Research-Statistics-Data-and-Systems/Files-for-Order/LimitedDataSets/StandardAnalyticalFiles).  If you rename any tables make sure you:
-- Update table names in sources.yml
-- Update table name in medical_claim and eligibility jinja function
 
-## 🙋🏻‍♀️ **How is this project maintained and can I contribute?**
+<br/><br/>
+
+## 🙋🏻‍♀️ How is this project maintained and can I contribute?
 
 ### Project Maintenance
 
-The Tuva Project team maintaining this project **only** maintains the latest version of the project. 
-We highly recommend you stay consistent with the latest version.
+The Tuva Project team maintaining this project **only** maintains the latest version of the project. We highly recommend you stay consistent with the latest version.
 
 ### Contributions
 
 Have an opinion on the mappings? Notice any bugs when installing and running the project?
 If so, we highly encourage and welcome feedback!  While we work on a formal process in Github, we can be easily reached on our Slack community.
+<br/><br/>
 
 ## 🤝 Community
 

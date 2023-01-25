@@ -2,22 +2,23 @@ name: 'medicare_saf_connector'
 version: '1.0.0'
 config-version: 2
 
-# This setting configures which "profile" dbt uses for this project.
-profile: 'default'                      # configuration required
+profile: 'tuva-snowflake'                     
 
 vars:
-  input_database: medicare_lds_saf      # configuration required
-                                        # name of the database where sources feeding this project are stored
 
-  input_schema:  saf                    # configuration required
-                                        # name of the schema where sources feeding this project is stored
+########################################
+#### Medicare SAF Project Variables ####
+########################################
 
-  output_database: tuva                 # configuration required
-                                        # name of the database where output of this project should be written
-
-  output_schema: claims_input           # configuration required
-                                        # name of the schema where output of this project should be written
-
+## Input Data Configurations:
+## Set the input_database variable and input_schema variable to the database
+## and schema where the raw Medicare SAF data is stored.
+  input_database: medicare_saf                                           
+  input_schema:  raw_data                                                            
+        
+## This project expects 15 standard Medicare SAF input tables with the following names.
+## If your tables have different names, adjust the values of the variables 
+## below accordingly.                                   
   carrier_base_claim: "{{ source('saf','carrier_base_claim') }}"
   carrier_claim_line: "{{ source('saf','carrier_claim_line') }}"
   dme_base_claim: "{{ source('saf','dme_base_claim') }}"
@@ -34,9 +35,67 @@ vars:
   snf_base_claim: "{{ source('saf','snf_base_claim') }}"
   snf_revenue_center: "{{ source('saf','snf_revenue_center') }}"
 
-# These configurations specify where dbt should look for different types of files.
-# The `source-paths` config, for example, states that models in this project can be
-# found in the "models/" directory. You probably won't need to change these!
+## Set the output_database and output_schema variables to tell dbt where to write
+## the Medicare SAF data that has been transformed into the Claims Data Model to.
+  output_database: medicare_saf                                                     
+  output_schema: claims_data_model
+
+########################################
+#### Tuva Project Package Variables ####
+########################################
+
+## Package Enabled Variables:
+## These variables tell the Tuva Project which packages you want
+## to enable.  To enable a package set it to true, to disable a 
+## package set it to false.
+  claims_preprocessing_enabled: true
+  cms_chronic_conditions_enabled: true
+  data_profiling_enabled: true 
+  pmpm_enabled: true
+  readmissions_enabled: true
+  terminology_enabled: true
+  tuva_chronic_conditions_enabled: true
+
+
+## Target Database Variable:
+## This variable tells the Tuva Project where to write the 
+## output data to.  You must create this database in your
+## data warehouse before running the Tuva Project.
+  tuva_database: medicare_saf  
+
+## Optional Configuration Variables:
+## If you named the 3 tables in the Tuva Claims Data Model
+## something other than the default names (i.e. medical_claim,
+## pharmacy_claim, and eligibility), you can edit the names
+## here.
+  # medical_claim_override:   "{{ref('medical_claim')}}"
+  # eligibility_override: "{{ref('eligibility')}}"
+  # pharmacy_claim_override: "{{ref('pharmacy_claim')}}"
+
+## If you want to add a prefix to every schema that the
+## Tuva Project will write data to, set this prefix in
+## this variable (it is commented out by default):
+  # tuva_schema_prefix: test
+
+## Use these variables to write the output of any specific 
+## package to a specific database and schema:
+  # claims_preprocessing_database: tuva
+  # claims_preprocessing_schema: core
+  # cms_chronic_conditions_database: tuva
+  # cms_chronic_conditions_schema: cms_chronic_conditions
+  # data_profiling_database: tuva
+  # data_profiling_schema: data_profiling
+  # pmpm_database: tuva
+  # pmpm_schema: pmpm
+  # readmissions_database: tuva
+  # readmissions_schema: readmissions
+  # terminology_database: tuva
+  # terminology_schema: terminology
+  # tuva_chronic_conditions_database: tuva
+  # tuva_chronic_conditions_schema: tuva_chronic_conditions
+
+
+
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
@@ -44,20 +103,13 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
-target-path: "target"  # directory which will store compiled SQL files
-clean-targets:         # directories to be removed by `dbt clean`
+target-path: "target"  
+clean-targets:         
   - "target"
   - "dbt_packages"
 
-
-# Configuring models
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
-
-# In this example config, we tell dbt to build all models in the example/ directory
-# as tables. These settings can be overridden in the individual model files
-# using the `{{ config(...) }}` macro.
 models:
   medicare_saf_connector:
-    +materialized: view
+    +materialized: table
     core:
       +materialized: table

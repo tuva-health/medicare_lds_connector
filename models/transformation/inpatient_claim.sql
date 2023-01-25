@@ -3,7 +3,7 @@ with inpatient_base_claim as (
     select *
          , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
     from {{ var('inpatient_base_claim') }}
-
+limit 1000
 ),
 
 /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
@@ -34,12 +34,16 @@ select
     , 'institutional' as claim_type
     , {{ cast_string_or_varchar('b.desy_sort_key') }} as patient_id
     , {{ cast_string_or_varchar('NULL') }} as member_id
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
-    , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_start_date
-    , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
-    , {{ try_to_cast_date('b.clm_admsn_dt', 'YYYYMMDD') }} as admission_date
-    , {{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
+    -- , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
+    , cast(substr(b.clm_admsn_dt,0,4) || '-' || substr(b.clm_admsn_dt,5,2) || '-' || substr(b.clm_admsn_dt,7,2) as date) as claim_start_date
+    -- , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    , cast(substr(b.clm_thru_dt,0,4) || '-' || substr(b.clm_thru_dt,5,2) || '-' || substr(b.clm_thru_dt,7,2) as date) as claim_end_date
+    , null as claim_line_start_date
+    , null as claim_line_end_date
+    -- , {{ try_to_cast_date('b.clm_admsn_dt', 'YYYYMMDD') }} as admission_date
+    , cast(substr(b.clm_admsn_dt,0,4) || '-' || substr(b.clm_admsn_dt,5,2) || '-' || substr(b.clm_admsn_dt,7,2) as date) as admission_date
+    -- , {{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
+    , cast(substr(b.nch_bene_dschrg_dt,0,4) || '-' || substr(b.nch_bene_dschrg_dt,5,2) || '-' || substr(b.nch_bene_dschrg_dt,7,2) as date) as discharge_date
     , {{ cast_string_or_varchar('b.clm_src_ip_admsn_cd') }} as admit_source_code
     , {{ cast_string_or_varchar('b.clm_ip_admsn_type_cd') }} as admit_type_code
     , {{ cast_string_or_varchar('b.ptnt_dschrg_stus_cd') }} as discharge_disposition_code
@@ -177,3 +181,4 @@ inner join {{ var('inpatient_revenue_center') }} as l
 left join header_payment p
     on b.claim_id = p.claim_id
     and l.clm_line_num = '1'
+limit 1000
