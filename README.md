@@ -1,12 +1,16 @@
 [![Apache License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) ![dbt logo and version](https://img.shields.io/static/v1?logo=dbt&label=dbt-version&message=1.x&color=orange)
 
-# Medicare SAF Claims Connector
+# Medicare SAF Connector
+
+## 🔗  Quick Links
+- [Docs](https://tuva-health.github.io/the_tuva_project/#!/overview): Learn about the Tuva Project data model
+- [Knowledge Base](https://thetuvaproject.com/docs/intro): Learn about claims data fundamentals and how to do claims data analytics
+<br/><br/>
 
 ## 🧰 What does this project do?
 
-This connector transforms raw Medicare SAF claims data into the Tuva Claims Input Layer which enables you to run most of the other components of the Tuva Project with very little effort.
-For a detailed overview of what the project does and how it works, check out our [Knowledge Base](https://thetuvaproject.com/docs/getting-started). 
-For information on data models and to view the entire DAG check out our dbt [Docs](https://tuva-health.github.io/medicare_saf_connector/#!/overview?g_v=1).
+This connector is a dbt project that transforms raw Medicare SAF LDS claims data into the Tuva Claims Data Model, which enables you to run the entire Tuva Project.  You can read more about Medicare SAF LDS data [here](https://www.cms.gov/Research-Statistics-Data-and-Systems/Files-for-Order/LimitedDataSets/StandardAnalyticalFiles).
+<br/><br/>
 
 ## 🔌 Database Support
 
