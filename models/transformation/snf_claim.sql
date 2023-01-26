@@ -3,7 +3,7 @@ with snf_base_claim as (
     select *
          , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
     from {{ var('snf_base_claim') }}
-
+    limit 1000
 ),
 
 /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
@@ -34,9 +34,9 @@ select
     , 'institutional' as claim_type
     , {{ cast_string_or_varchar('b.desy_sort_key') }} as patient_id
     , {{ cast_string_or_varchar('NULL') }} as member_id
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
+    , date(NULL) as claim_start_date
     , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
-    , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_start_date
+     , date(NULL) as claim_line_start_date
     , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
     , {{ try_to_cast_date('b.clm_admsn_dt','YYYYMMDD') }} as admission_date
     , {{ try_to_cast_date('b.nch_bene_dschrg_dt','YYYYMMDD') }} as discharge_date
