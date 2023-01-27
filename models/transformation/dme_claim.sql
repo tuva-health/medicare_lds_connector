@@ -1,9 +1,8 @@
 with dme_base_claim as (
 
     select *
-         , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
+         , left(clm_thru_dt,4) as clm_thru_dt_year
     from {{ var('dme_base_claim') }}
-    limit 1000
 )
 
 select
