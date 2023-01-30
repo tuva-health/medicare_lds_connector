@@ -1,9 +1,8 @@
 with hospice_base_claim as (
 
     select *
-         , {{ date_trunc('clm_thru_dt', 'YYYYMMDD', 'year') }} as clm_thru_dt_year
+         , left(clm_thru_dt,4) as clm_thru_dt_year
     from {{ var('hospice_base_claim') }}
-
 )
 
 select
@@ -16,9 +15,9 @@ select
     , 'institutional' as claim_type
     , {{ cast_string_or_varchar('b.desy_sort_key') }} as patient_id
     , {{ cast_string_or_varchar('NULL') }} as member_id
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_start_date
+    , date(NULL) as claim_start_date
     , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
-    , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_start_date
+     , date(NULL) as claim_line_start_date
     , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
     , {{ try_to_cast_date('b.clm_hospc_start_dt_id', 'YYYYMMDD') }} as admission_date
     , {{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
