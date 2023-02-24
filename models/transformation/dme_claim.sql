@@ -27,6 +27,7 @@ select
     , {{ cast_string_or_varchar('l.line_place_of_srvc_cd') }} as place_of_service_code
     , {{ cast_string_or_varchar('NULL') }} as bill_type_code
     , {{ cast_string_or_varchar('NULL') }} as ms_drg_code
+    , {{ cast_string_or_varchar('NULL') }} as apr_drg_code
     , {{ cast_string_or_varchar('NULL') }} as revenue_center_code
     , cast(regexp_substr(l.line_srvc_cnt,'.') as integer) as service_unit_quantity
     , {{ cast_string_or_varchar('l.hcpcs_cd') }} as hcpcs_code

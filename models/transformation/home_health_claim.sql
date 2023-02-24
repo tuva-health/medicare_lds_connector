@@ -30,6 +30,7 @@ select
         || {{ cast_string_or_varchar('b.clm_freq_cd') }}
       as bill_type_code
     , {{ cast_string_or_varchar('NULL') }} as ms_drg_code
+    , {{ cast_string_or_varchar('NULL') }} as apr_drg_code
     , {{ cast_string_or_varchar('l.rev_cntr') }} as revenue_center_code
     , cast(regexp_substr(l.rev_cntr_unit_cnt, '.') as integer) as service_unit_quantity
     , {{ cast_string_or_varchar('l.hcpcs_cd') }} as hcpcs_code
