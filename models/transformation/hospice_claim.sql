@@ -3,6 +3,19 @@ with hospice_base_claim as (
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
     from {{ var('hospice_base_claim') }}
+    where clm_mdcr_non_pmt_rsn_cd is null
+    /** filter out denied claims **/
+)
+, header_payment as (
+    select
+        claim_no as claim_id
+        , cast(clm_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
+        , /** medicare payment **/
+          cast(clm_pmt_amt as {{ dbt.type_numeric() }}) 
+          /** primary payer payment **/
+          + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
+        as total_cost_amount
+    from hospice_base_claim
 )
 
 select
@@ -148,8 +161,11 @@ select
     , date(NULL) as procedure_date_23
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
-    , 'saf' as data_source
+    , 'medicare_lds' as data_source
 from hospice_base_claim as b
 inner join {{ var('hospice_revenue_center') }} as l
     on b.claim_no = l.claim_no
-
+/* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
+left join header_payment p
+    on b.claim_no = p.claim_id
+    and l.rev_cntr = '001'

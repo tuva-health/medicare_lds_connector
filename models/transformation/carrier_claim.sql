@@ -3,6 +3,8 @@ with carrier_base_claim as (
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
     from {{ var('carrier_base_claim') }}
+    where carr_clm_pmt_dnl_cd <> '0'
+    /** filter out denied claims **/
 
 )
 
@@ -15,9 +17,9 @@ select
     , cast(l.line_num as integer) as claim_line_number
     , 'professional' as claim_type
     , {{ cast_string_or_varchar('b.desy_sort_key') }} as patient_id
-    , {{ cast_string_or_varchar('NULL') }} as member_id
+    , {{ cast_string_or_varchar('b.desy_sort_key') }} as member_id
     , date(NULL) as claim_start_date
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    , {{try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD')}} as claim_end_date
     , date(NULL) as claim_line_start_date
     , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
     , date(NULL) as admission_date
@@ -38,11 +40,18 @@ select
     , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_4
     , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_5
     , {{ cast_string_or_varchar('l.prf_physn_npi') }} as rendering_npi
-    , {{ cast_string_or_varchar('NULL') }} as billing_npi
-    , {{ cast_string_or_varchar('l.org_npi_num') }} as facility_npi
+    , {{ cast_string_or_varchar('b.carr_clm_blg_npi_num') }} as billing_npi
+    , {{ cast_string_or_varchar('null') }} as facility_npi
     , date(NULL) as paid_date
     , {{ cast_numeric('l.line_nch_pmt_amt') }} as paid_amount
-    , {{ cast_numeric('l.line_alowd_chrg_amt') }} as allowed_amount
+    , /** medicare payment **/
+      cast(line_nch_pmt_amt as {{ dbt.type_numeric() }}) 
+      /** beneficiary payment **/
+      + cast(line_bene_ptb_ddctbl_amt as {{ dbt.type_numeric() }}) 
+      /** primary payer payment **/
+      + cast(line_bene_prmry_pyr_pd_amt as {{ dbt.type_numeric() }})
+    as total_cost_amount
+    , {{ cast_numeric('null') }} as allowed_amount
     , {{ cast_numeric('l.line_alowd_chrg_amt') }} as charge_amount
     , case when b.prncpal_dgns_vrsn_cd = '0' then 'icd-10-cm'
            when b.prncpal_dgns_vrsn_cd = '9' then 'icd-9-cm'
@@ -149,7 +158,7 @@ select
     , date(NULL) as procedure_date_23
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
-    , 'saf' as data_source
+    , 'medicare_lds' as data_source
 from carrier_base_claim as b
 inner join {{ var('carrier_claim_line') }} as l
     on b.claim_no = l.claim_no

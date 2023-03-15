@@ -3,8 +3,20 @@ with hha_base_claim as (
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
     from {{ var('hha_base_claim') }}
+    where clm_mdcr_non_pmt_rsn_cd is null
+    /** filter out denied claims **/
 )
-
+, header_payment as (
+    select
+        claim_no as claim_id
+        , cast(clm_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
+        , /** medicare payment **/
+          cast(clm_pmt_amt as {{ dbt.type_numeric() }}) 
+          /** primary payer payment **/
+          + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
+        as total_cost_amount
+    from hha_base_claim
+)
 select
       /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
       {{ cast_string_or_varchar('b.claim_no') }}
@@ -23,7 +35,7 @@ select
     , {{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
     , {{ cast_string_or_varchar('NULL') }} as admit_source_code
     , {{ cast_string_or_varchar('NULL') }} as admit_type_code
-    , {{ cast_string_or_varchar('NULL') }} as discharge_disposition_code
+    , {{ cast_string_or_varchar('b.ptnt_dschrg_stus_cd') }} as discharge_disposition_code
     , {{ cast_string_or_varchar('NULL') }} as place_of_service_code
     , {{ cast_string_or_varchar('b.clm_fac_type_cd') }}
         || {{ cast_string_or_varchar('b.clm_srvc_clsfctn_type_cd') }}
@@ -40,8 +52,8 @@ select
     , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_4
     , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_5
     , {{ cast_string_or_varchar('l.rev_cntr_rndrng_physn_npi') }} as rendering_npi
-    , {{ cast_string_or_varchar('NULL') }} as billing_npi
-    , {{ cast_string_or_varchar('b.org_npi_num') }} as facility_npi
+    , {{ cast_string_or_varchar('b.org_npi_num') }} as billing_npi
+    , {{ cast_string_or_varchar('b.srvc_loc_npi_num') }} as facility_npi
     , date(NULL) as paid_date
     , {{ cast_numeric('l.rev_cntr_pmt_amt_amt') }} as paid_amount
     , {{ cast_numeric('NULL') }} as allowed_amount
@@ -148,7 +160,11 @@ select
     , date(NULL) as procedure_date_23
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
-    , 'saf' as data_source
+    , 'medicare_lds' as data_source
 from hha_base_claim as b
 inner join {{ var('hha_revenue_center') }} as l
     on b.claim_no = l.claim_no
+/* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
+left join header_payment p
+    on b.claim_no = p.claim_id
+    and l.rev_cntr = '001'

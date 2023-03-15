@@ -3,6 +3,8 @@ with snf_base_claim as (
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
     from {{ var('snf_base_claim') }}
+    where clm_mdcr_non_pmt_rsn_cd is null
+    /** filter out denied claims **/
 ),
 
 /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
@@ -22,7 +24,15 @@ header_payment as (
 
     select
           claim_id
-        , clm_pmt_amt
+        , cast(clm_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
+        , /** Medicare payment **/
+          cast(clm_pmt_amt as {{ dbt.type_numeric() }})
+          /** benficiary payment **/
+          + cast(nch_bene_ip_ddctbl_amt as {{ dbt.type_numeric() }}) + cast(nch_bene_pta_coinsrnc_lblty_am as {{ dbt.type_numeric() }}) + cast(nch_bene_blood_ddctbl_lblty_am as {{ dbt.type_numeric() }})
+          /** primary payer payment **/
+          + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
+        as total_cost_amount
+        , cast(clm_tot_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
     from add_claim_id
 
 )
@@ -62,11 +72,12 @@ select
     , {{ cast_string_or_varchar('b.org_npi_num') }} as facility_npi
     , date(NULL) as paid_date
     , coalesce(
-             {{ cast_numeric('p.clm_pmt_amt') }}
-            ,{{ cast_numeric('0') }}
+            p.paid_amount
+            , cast(0 as {{ dbt.type_numeric() }})
       ) as paid_amount
-    , {{ cast_numeric('NULL') }} as allowed_amount
-    , {{ cast_numeric('l.rev_cntr_tot_chrg_amt') }} as charge_amount
+    , p.total_cost_amount as total_cost_amount
+    , cast(NULL as {{ dbt.type_numeric() }}) as allowed_amount
+    , p.charge_amount as charge_amount
     , 'icd-10-cm' as diagnosis_code_type
     , {{ cast_string_or_varchar('b.prncpal_dgns_cd') }} as diagnosis_code_1
     , {{ cast_string_or_varchar('b.icd_dgns_cd2') }} as diagnosis_code_2
@@ -169,11 +180,11 @@ select
     , {{ try_to_cast_date('b.prcdr_dt23', 'YYYYMMDD') }} as procedure_date_23
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
-    , 'saf' as data_source
+    , 'medicare_lds' as data_source
 from add_claim_id as b
 inner join {{ var('snf_revenue_center') }} as l
     on b.claim_no = l.claim_no
-/* Payment is provided at the header level only.  Populating on line number 1 to avoid duplication. */
+/* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
 left join header_payment p
     on b.claim_id = p.claim_id
-    and l.clm_line_num = '1'
+    and l.rev_cntr = '001'

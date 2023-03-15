@@ -3,6 +3,8 @@ with dme_base_claim as (
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
     from {{ var('dme_base_claim') }}
+    where carr_clm_pmt_dnl_cd <> '0'
+    /** filter out denied claims **/
 )
 
 select
@@ -36,12 +38,19 @@ select
     , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_3
     , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_4
     , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_5
-    , {{ cast_string_or_varchar('l.prvdr_npi') }} as rendering_npi
-    , {{ cast_string_or_varchar('NULL') }} as billing_npi
+    , {{ cast_string_or_varchar('null') }} as rendering_npi
+    , {{ cast_string_or_varchar('l.prvdr_npi') }} as billing_npi
     , {{ cast_string_or_varchar('NULL') }} as facility_npi
     , date(NULL) as paid_date
     , {{ cast_numeric('l.line_nch_pmt_amt') }} as paid_amount
-    , {{ cast_numeric('l.line_alowd_chrg_amt') }} as allowed_amount
+    , /** medicare payment **/
+      cast(line_nch_pmt_amt as {{ dbt.type_numeric() }}) 
+      /** beneficiary payment **/
+      + cast(line_bene_ptb_ddctbl_amt as {{ dbt.type_numeric() }}) 
+      /** primary payer payment **/
+      + cast(line_bene_prmry_pyr_pd_amt as {{ dbt.type_numeric() }})
+    as total_cost_amount
+    , {{ cast_numeric('null') }} as allowed_amount
     , {{ cast_numeric('l.line_alowd_chrg_amt') }} as charge_amount
     , case when b.prncpal_dgns_vrsn_cd = '0' then 'icd-10-cm'
            when b.prncpal_dgns_vrsn_cd = '9' then 'icd-9-cm'
@@ -148,7 +157,7 @@ select
     , date(NULL) as procedure_date_23
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
-    , 'saf' as data_source
+    , 'medicare_lds' as data_source
 from dme_base_claim as b
 inner join {{ var('dme_claim_line') }} as l
     on b.claim_no = l.claim_no

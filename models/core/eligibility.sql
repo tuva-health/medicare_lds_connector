@@ -15,7 +15,7 @@ with eligibility_unpivot as (
 
 medicare_state_fips as (
 
-    select * from {{ ref('medicare_state_fips') }}
+    select * from {{ ref('terminology__ssa_state_codes') }}
 
 ),
 
@@ -137,11 +137,11 @@ joined as (
         , case eligibility_unpivot.race_code
                when '0' then 'unknown'
                when '1' then 'white'
-               when '2' then 'black'
-               when '3' then 'other'
+               when '2' then 'black or african american'
+               when '3' then 'other race'
                when '4' then 'asian'
-               when '5' then 'hispanic'
-               when '6' then 'north american native'
+               when '5' then 'other race'
+               when '6' then 'american indian or alaska native'
           end as race
         , {{ to_date('eligibility_unpivot.birth_year', 'YYYY') }} as birth_date
         , {{ to_date('eligibility_unpivot.date_of_death', 'YYYYMMDD') }} as death_date
