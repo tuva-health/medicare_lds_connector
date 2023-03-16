@@ -15,7 +15,7 @@ with eligibility_unpivot as (
 
 medicare_state_fips as (
 
-    select * from {{ ref('terminology__ssa_state_codes') }}
+    select * from {{ ref('terminology__ssa_fips_state') }}
 
 ),
 
@@ -127,8 +127,8 @@ enrollment_span as (
 joined as (
 
     select
-          {{ cast_string_or_varchar('enrollment_span.desy_sort_key') }} as patient_id
-        , {{ cast_string_or_varchar('NULL') }} as member_id
+          cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as patient_id
+        , cast(NULL as {{ dbt.type_string() }} ) as member_id
         , case eligibility_unpivot.sex_code
                when '0' then 'unknown'
                when '1' then 'male'
@@ -153,22 +153,22 @@ joined as (
         , enrollment_span.enrollment_end_date_last as enrollment_end_date
         , 'medicare' as payer
         , 'medicare' as payer_type
-        , {{ cast_string_or_varchar('eligibility_unpivot.dual_status') }} as dual_status_code
-        , {{ cast_string_or_varchar('eligibility_unpivot.medicare_status') }} as medicare_status_code
-        , {{ cast_string_or_varchar('NULL') }} as first_name
-        , {{ cast_string_or_varchar('NULL') }} as last_name
-        , {{ cast_string_or_varchar('NULL') }} as address
-        , {{ cast_string_or_varchar('NULL') }} as city
-        , {{ cast_string_or_varchar('medicare_state_fips.state') }} as state
-        , {{ cast_string_or_varchar('NULL') }} as zip_code
-        , {{ cast_string_or_varchar('NULL') }} as phone
+        , cast(eligibility_unpivot.dual_status as {{ dbt.type_string() }} ) as dual_status_code
+        , cast(eligibility_unpivot.medicare_status as {{ dbt.type_string() }} ) as medicare_status_code
+        , cast(NULL as {{ dbt.type_string() }} ) as first_name
+        , cast(NULL as {{ dbt.type_string() }} ) as last_name
+        , cast(NULL as {{ dbt.type_string() }} ) as address
+        , cast(NULL as {{ dbt.type_string() }} ) as city
+        , cast(medicare_state_fips.ssa_fips_state_name as {{ dbt.type_string() }} ) as state
+        , cast(NULL as {{ dbt.type_string() }} ) as zip_code
+        , cast(NULL as {{ dbt.type_string() }} ) as phone
         , 'saf' as data_source
     from enrollment_span
          left join eligibility_unpivot
             on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key
             and enrollment_span.enrollment_end_date_max = eligibility_unpivot.enrollment_date
          left join medicare_state_fips
-            on eligibility_unpivot.state_code = medicare_state_fips.fips_code
+            on eligibility_unpivot.state_code = medicare_state_fips.ssa_fips_state_code
 
 )
 
