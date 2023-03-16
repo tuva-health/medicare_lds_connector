@@ -56,6 +56,7 @@ select
     , {{ cast_string_or_varchar('b.srvc_loc_npi_num') }} as facility_npi
     , date(NULL) as paid_date
     , {{ cast_numeric('l.rev_cntr_pmt_amt_amt') }} as paid_amount
+    , p.total_cost_amount as total_cost_amount
     , {{ cast_numeric('NULL') }} as allowed_amount
     , {{ cast_numeric('l.rev_cntr_tot_chrg_amt') }} as charge_amount
     , 'icd-10-cm' as diagnosis_code_type
