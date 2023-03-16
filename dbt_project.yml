@@ -12,13 +12,13 @@ vars:
 #########################################
 #### Medicare SAF Project Variables ####
 #########################################
-  input_database: medicare_lds
-  input_schema:  raw_data
+  input_database: medicare-lds-five-percent
+  input_schema:  raw_data_five_percent
 
-  output_database: medicare_lds
-  output_schema: input_layer
+  output_database: medicare-lds-five-percent
+  output_schema: claims_data_model
   
-  tuva_database: medicare_lds
+  tuva_database: medicare-lds-five-percent  
 
 
   ## Source Table Names
