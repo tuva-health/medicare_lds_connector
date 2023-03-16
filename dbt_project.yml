@@ -18,6 +18,11 @@ vars:
   output_database: medicare_saf
   output_schema: claims_data_model
   
+########################################
+#### Tuva Project Package Variables ####
+########################################
+
+# Target Database Variable:
   tuva_database: medicare_saf 
 
 
