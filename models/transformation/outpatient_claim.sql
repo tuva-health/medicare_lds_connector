@@ -30,7 +30,7 @@ select
     , cast(l.clm_line_num as integer) as claim_line_number
     , 'institutional' as claim_type
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as patient_id
-    , cast(NULL as {{ dbt.type_string() }} ) as member_id
+    , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
     , date(NULL) as claim_start_date
     , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
     , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_start_date
