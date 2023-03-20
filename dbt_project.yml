@@ -12,12 +12,19 @@ vars:
 #########################################
 #### Medicare SAF Project Variables ####
 #########################################
-
-  input_database: medicare_saf      
+  input_database: medicare-lds
   input_schema:  raw_data
 
-  output_database: medicare_saf
-  output_schema: claims_data_model
+  output_database: medicare-lds
+  output_schema: input_layer
+  
+########################################
+#### Tuva Project Package Variables ####
+########################################
+
+# Target Database Variable:
+  tuva_database: medicare-lds
+
 
   ## Source Table Names
   carrier_base_claim: "{{ source('saf','carrier_base_claim') }}"
@@ -36,28 +43,6 @@ vars:
   snf_base_claim: "{{ source('saf','snf_base_claim') }}"
   snf_revenue_center: "{{ source('saf','snf_revenue_center') }}"
 
-########################################
-#### Tuva Project Package Variables ####
-########################################
-
-## Package Enabled Variables:
-## These variables tell the Tuva Project which packages you want
-## to enable.  To enable a package set it to true, to disable a 
-## package set it to false.
-  claims_preprocessing_enabled: true
-  cms_chronic_conditions_enabled: true
-  data_profiling_enabled: true 
-  pmpm_enabled: true
-  readmissions_enabled: true
-  terminology_enabled: true
-  tuva_chronic_conditions_enabled: true
-
-
-## Target Database Variable:
-## This variable tells the Tuva Project where to write the 
-## output data to.  You must create this database in your
-## data warehouse before running the Tuva Project.
-  tuva_database: medicare_saf  
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]

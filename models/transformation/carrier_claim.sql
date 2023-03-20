@@ -3,127 +3,136 @@ with carrier_base_claim as (
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
     from {{ var('carrier_base_claim') }}
+    where carr_clm_pmt_dnl_cd <> '0'
+    /** filter out denied claims **/
 
 )
 
 select
       /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
-      {{ cast_string_or_varchar('b.claim_no') }}
-        || {{ cast_string_or_varchar('b.clm_thru_dt_year') }}
-        || {{ cast_string_or_varchar('b.nch_clm_type_cd') }}
+      cast(b.claim_no as {{ dbt.type_string() }} )
+        || cast(b.clm_thru_dt_year as {{ dbt.type_string() }} )
+        || cast(b.nch_clm_type_cd as {{ dbt.type_string() }} )
       as claim_id
     , cast(l.line_num as integer) as claim_line_number
     , 'professional' as claim_type
-    , {{ cast_string_or_varchar('b.desy_sort_key') }} as patient_id
-    , {{ cast_string_or_varchar('NULL') }} as member_id
+    , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as patient_id
+    , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
     , date(NULL) as claim_start_date
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
+    , {{try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD')}} as claim_end_date
     , date(NULL) as claim_line_start_date
     , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
     , date(NULL) as admission_date
     , date(NULL) as discharge_date
-    , {{ cast_string_or_varchar('NULL') }} as admit_source_code
-    , {{ cast_string_or_varchar('NULL') }} as admit_type_code
-    , {{ cast_string_or_varchar('NULL') }} as discharge_disposition_code
-    , {{ cast_string_or_varchar('l.line_place_of_srvc_cd') }} as place_of_service_code
-    , {{ cast_string_or_varchar('NULL') }} as bill_type_code
-    , {{ cast_string_or_varchar('NULL') }} as ms_drg_code
-    , {{ cast_string_or_varchar('NULL') }} as apr_drg_code
-    , {{ cast_string_or_varchar('NULL') }} as revenue_center_code
+    , cast(NULL as {{ dbt.type_string() }} ) as admit_source_code
+    , cast(NULL as {{ dbt.type_string() }} ) as admit_type_code
+    , cast(NULL as {{ dbt.type_string() }} ) as discharge_disposition_code
+    , cast(l.line_place_of_srvc_cd as {{ dbt.type_string() }} ) as place_of_service_code
+    , cast(NULL as {{ dbt.type_string() }} ) as bill_type_code
+    , cast(NULL as {{ dbt.type_string() }} ) as ms_drg_code
+    , cast(NULL as {{ dbt.type_string() }} ) as apr_drg_code
+    , cast(NULL as {{ dbt.type_string() }} ) as revenue_center_code
     , cast(regexp_substr(l.line_srvc_cnt,'.') as integer) as service_unit_quantity
-    , {{ cast_string_or_varchar('l.hcpcs_cd') }} as hcpcs_code
-    , {{ cast_string_or_varchar('l.hcpcs_1st_mdfr_cd') }} as hcpcs_modifier_1
-    , {{ cast_string_or_varchar('l.hcpcs_2nd_mdfr_cd') }} as hcpcs_modifier_2
-    , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_3
-    , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_4
-    , {{ cast_string_or_varchar('NULL') }} as hcpcs_modifier_5
-    , {{ cast_string_or_varchar('l.prf_physn_npi') }} as rendering_npi
-    , {{ cast_string_or_varchar('NULL') }} as billing_npi
-    , {{ cast_string_or_varchar('l.org_npi_num') }} as facility_npi
+    , cast(l.hcpcs_cd as {{ dbt.type_string() }} ) as hcpcs_code
+    , cast(l.hcpcs_1st_mdfr_cd as {{ dbt.type_string() }} ) as hcpcs_modifier_1
+    , cast(l.hcpcs_2nd_mdfr_cd as {{ dbt.type_string() }} ) as hcpcs_modifier_2
+    , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_3
+    , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_4
+    , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
+    , cast(l.prf_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
+    , cast(b.carr_clm_blg_npi_num as {{ dbt.type_string() }} ) as billing_npi
+    , cast(null as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
-    , {{ cast_numeric('l.line_nch_pmt_amt') }} as paid_amount
-    , {{ cast_numeric('l.line_alowd_chrg_amt') }} as allowed_amount
-    , {{ cast_numeric('l.line_alowd_chrg_amt') }} as charge_amount
+    , cast(l.line_nch_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
+    , /** medicare payment **/
+      cast(line_nch_pmt_amt as {{ dbt.type_numeric() }}) 
+      /** beneficiary payment **/
+      + cast(line_bene_ptb_ddctbl_amt as {{ dbt.type_numeric() }}) 
+      /** primary payer payment **/
+      + cast(line_bene_prmry_pyr_pd_amt as {{ dbt.type_numeric() }})
+    as total_cost_amount
+    , cast(null as {{ dbt.type_numeric() }}) as allowed_amount
+    , cast(l.line_alowd_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
     , case when b.prncpal_dgns_vrsn_cd = '0' then 'icd-10-cm'
            when b.prncpal_dgns_vrsn_cd = '9' then 'icd-9-cm'
            when b.prncpal_dgns_vrsn_cd is null then 'icd-9-cm'
       end as diagnosis_code_type
-    , {{ cast_string_or_varchar('b.prncpal_dgns_cd') }} as diagnosis_code_1
-    , {{ cast_string_or_varchar('b.icd_dgns_cd2') }} as diagnosis_code_2
-    , {{ cast_string_or_varchar('b.icd_dgns_cd3') }} as diagnosis_code_3
-    , {{ cast_string_or_varchar('b.icd_dgns_cd4') }} as diagnosis_code_4
-    , {{ cast_string_or_varchar('b.icd_dgns_cd5') }} as diagnosis_code_5
-    , {{ cast_string_or_varchar('b.icd_dgns_cd6') }} as diagnosis_code_6
-    , {{ cast_string_or_varchar('b.icd_dgns_cd7') }} as diagnosis_code_7
-    , {{ cast_string_or_varchar('b.icd_dgns_cd8') }} as diagnosis_code_8
-    , {{ cast_string_or_varchar('b.icd_dgns_cd9') }} as diagnosis_code_9
-    , {{ cast_string_or_varchar('b.icd_dgns_cd10') }} as diagnosis_code_10
-    , {{ cast_string_or_varchar('b.icd_dgns_cd11') }} as diagnosis_code_11
-    , {{ cast_string_or_varchar('b.icd_dgns_cd12') }} as diagnosis_code_12
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_13
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_14
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_15
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_16
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_17
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_18
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_19
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_20
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_21
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_22
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_23
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_24
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_code_25
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_1
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_2
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_3
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_4
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_5
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_6
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_7
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_8
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_9
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_10
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_11
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_12
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_13
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_14
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_15
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_16
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_17
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_18
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_19
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_20
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_21
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_22
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_23
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_24
-    , {{ cast_string_or_varchar('NULL') }} as diagnosis_poa_25
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_type
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_1
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_2
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_3
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_4
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_5
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_6
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_7
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_8
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_9
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_10
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_11
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_12
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_13
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_14
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_15
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_16
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_17
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_18
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_19
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_20
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_21
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_22
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_23
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_24
-    , {{ cast_string_or_varchar('NULL') }} as procedure_code_25
+    , cast(b.prncpal_dgns_cd as {{ dbt.type_string() }} ) as diagnosis_code_1
+    , cast(b.icd_dgns_cd2 as {{ dbt.type_string() }} ) as diagnosis_code_2
+    , cast(b.icd_dgns_cd3 as {{ dbt.type_string() }} ) as diagnosis_code_3
+    , cast(b.icd_dgns_cd4 as {{ dbt.type_string() }} ) as diagnosis_code_4
+    , cast(b.icd_dgns_cd5 as {{ dbt.type_string() }} ) as diagnosis_code_5
+    , cast(b.icd_dgns_cd6 as {{ dbt.type_string() }} ) as diagnosis_code_6
+    , cast(b.icd_dgns_cd7 as {{ dbt.type_string() }} ) as diagnosis_code_7
+    , cast(b.icd_dgns_cd8 as {{ dbt.type_string() }} ) as diagnosis_code_8
+    , cast(b.icd_dgns_cd9 as {{ dbt.type_string() }} ) as diagnosis_code_9
+    , cast(b.icd_dgns_cd10 as {{ dbt.type_string() }} ) as diagnosis_code_10
+    , cast(b.icd_dgns_cd11 as {{ dbt.type_string() }} ) as diagnosis_code_11
+    , cast(b.icd_dgns_cd12 as {{ dbt.type_string() }} ) as diagnosis_code_12
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_13
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_14
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_15
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_16
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_17
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_18
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_19
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_20
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_21
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_22
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_23
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_24
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_code_25
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_1
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_2
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_3
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_4
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_5
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_6
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_7
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_8
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_9
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_10
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_11
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_12
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_13
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_14
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_15
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_16
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_17
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_18
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_19
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_20
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_21
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_22
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_23
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_24
+    , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_25
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_type
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_1
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_2
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_3
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_4
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_5
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_6
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_7
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_8
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_9
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_10
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_11
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_12
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_13
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_14
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_15
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_16
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_17
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_18
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_19
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_20
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_21
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_22
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_23
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_24
+    , cast(NULL as {{ dbt.type_string() }} ) as procedure_code_25
     , date(NULL) as procedure_date_1
     , date(NULL) as procedure_date_2
     , date(NULL) as procedure_date_3
@@ -149,7 +158,7 @@ select
     , date(NULL) as procedure_date_23
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
-    , 'saf' as data_source
+    , 'medicare_lds' as data_source
 from carrier_base_claim as b
 inner join {{ var('carrier_claim_line') }} as l
     on b.claim_no = l.claim_no
