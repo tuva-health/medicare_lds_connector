@@ -6,8 +6,9 @@ models:
   - name: carrier_claim
     description: Claim line details of carrier claims
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: _int_carrier_claim
     tests:
       - unique:
           column_name: "(claim_id || '-' || claim_line_number)"
@@ -15,8 +16,9 @@ models:
   - name: dme_claim
     description: Claim line details of durable medical equipment claims
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: _int_dme_claim
     tests:
       - unique:
           column_name: "(claim_id || '-' || claim_line_number)"
@@ -27,14 +29,16 @@ models:
       on DUAL_STUS_CD and MDCR_STATUS_CODE creating a row for each year/month 
       of eligibility.
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: _int_eligibility_unpivot
 
   - name: home_health_claim
     description: Claim line details of home health claims
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: _int_home_health_claim
     tests:
       - unique:
           column_name: "(claim_id || '-' || claim_line_number)"
@@ -42,8 +46,9 @@ models:
   - name: hospice_claim
     description: Claim line details of hospice claims
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: _int_hospice_claim
     tests:
       - unique:
           column_name: "(claim_id || '-' || claim_line_number)"
@@ -51,8 +56,9 @@ models:
   - name: inpatient_claim
     description: Claim line details of inpatient claims
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: _int_inpatient_claim
     tests:
       - unique:
           column_name: "(claim_id || '-' || claim_line_number)"
@@ -60,8 +66,9 @@ models:
   - name: outpatient_claim
     description: Claim line details of outpatient claims
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: _int_outpatient_claim
     tests:
       - unique:
           column_name: "(claim_id || '-' || claim_line_number)"
@@ -69,8 +76,9 @@ models:
   - name: snf_claim
     description: Claim line details of skilled nursing facility claims
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: _int_snf_claim
     tests:
       - unique:
           column_name: "(claim_id || '-' || claim_line_number)"
@@ -79,8 +87,9 @@ models:
   - name: eligibility
     description: Member eligibility at the month grain
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: eligibility
     tests:
       - unique:
           column_name: "(patient_id || '-' || payer || '-' || enrollment_start_date || '-' || enrollment_end_date)"
@@ -88,8 +97,9 @@ models:
   - name: medical_claim
     description: Claim line details of all claim types
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: medical_claim
     tests:
       - unique:
           column_name: "(claim_id || '-' || claim_line_number)"
@@ -97,5 +107,6 @@ models:
   - name: pharmacy_claim
     description: Claim line details of all claim types
     config:
-      database: "{{ var('output_database')}}"
-      schema: "{{ var('output_schema')}}"
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: pharmacy_claim

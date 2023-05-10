@@ -2,7 +2,7 @@ with outpatient_base_claim as (
 
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
-    from {{ var('outpatient_base_claim') }}
+    from {{ ref('outpatient_base_claim') }}
     where clm_mdcr_non_pmt_rsn_cd is null
     /** filter out denied claims **/
 )
@@ -18,6 +18,7 @@ with outpatient_base_claim as (
         + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
          as total_cost_amount
         , cast(clm_tot_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
+        , data_source
     from outpatient_base_claim
 )
 
@@ -168,11 +169,13 @@ select
     , {{ try_to_cast_date('b.prcdr_dt23', 'YYYYMMDD') }} as procedure_date_23
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
-    , 'medicare_lds' as data_source
+    , b.data_source as data_source
 from outpatient_base_claim as b
-inner join {{ var('outpatient_revenue_center') }} as l
+inner join {{ ref('outpatient_revenue_center') }} as l
     on b.claim_no = l.claim_no
+    and b.data_source = l.data_source
 /* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
 left join header_payment p
     on b.claim_no = p.claim_id
-    and l.rev_cntr = '001'
+    and b.data_source = l.data_source
+    and l.rev_cntr in ('001', '0001')

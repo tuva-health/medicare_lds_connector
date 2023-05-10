@@ -1,0 +1,4 @@
+packages:
+  - local: ../
+  - package: tuva-health/the_tuva_project
+    version: 0.3.0

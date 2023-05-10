@@ -13,11 +13,6 @@ with eligibility_unpivot as (
 
 ),
 
-medicare_state_fips as (
-
-    select * from {{ ref('terminology__ssa_fips_state') }}
-
-),
 
 add_row_num as (
 
@@ -25,7 +20,7 @@ add_row_num as (
           desy_sort_key
         , enrollment_date
         , row_number() over (
-            partition by desy_sort_key
+            partition by desy_sort_key, data_source
             order by enrollment_date
           ) as row_num
         , case
@@ -33,6 +28,7 @@ add_row_num as (
             and dual_status in (null, '00', '99', 'NA') then 1
             else 0
           end as disenrolled_flag
+        , data_source
     from eligibility_unpivot
 
 ),
@@ -48,6 +44,7 @@ remove_disenrolled_months as (
         , enrollment_date
         , row_num
         , disenrolled_flag
+        , data_source
     from add_row_num
     where disenrolled_flag = 0
 
@@ -60,9 +57,10 @@ add_lag_enrollment as (
         , enrollment_date
         , row_num
         , lag(enrollment_date) over (
-            partition by desy_sort_key
+            partition by desy_sort_key, data_source
             order by row_num
           ) as lag_enrollment
+        , data_source
     from remove_disenrolled_months
 
 ),
@@ -75,6 +73,7 @@ calculate_lag_diff as (
         , row_num
         , lag_enrollment
         , {{ datediff('lag_enrollment', 'enrollment_date', 'month') }} as lag_diff
+        , data_source
     from add_lag_enrollment
 
 ),
@@ -91,6 +90,7 @@ calculate_gaps as (
             when lag_diff > 1 then 1
             else 0
           end as gap_flag
+        , data_source
     from calculate_lag_diff
 
 ),
@@ -103,10 +103,11 @@ calculate_groups as (
         , row_num
         , gap_flag
         , sum(gap_flag) over (
-            partition by desy_sort_key
+            partition by desy_sort_key, data_source
             order by row_num
             rows between unbounded preceding and current row
           ) as row_group
+        , data_source
     from calculate_gaps
 
 ),
@@ -119,8 +120,9 @@ enrollment_span as (
         , min(enrollment_date) as enrollment_start_date
         , max(enrollment_date) as enrollment_end_date_max
         , last_day(max(enrollment_date)) as enrollment_end_date_last
+        , data_source
     from calculate_groups
-    group by desy_sort_key, row_group
+    group by desy_sort_key, row_group, data_source
 
 ),
 
@@ -162,12 +164,12 @@ joined as (
         , cast(medicare_state_fips.ssa_fips_state_name as {{ dbt.type_string() }} ) as state
         , cast(NULL as {{ dbt.type_string() }} ) as zip_code
         , cast(NULL as {{ dbt.type_string() }} ) as phone
-        , 'saf' as data_source
+        , enrollment_span.data_source as data_source
     from enrollment_span
          left join eligibility_unpivot
             on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key
             and enrollment_span.enrollment_end_date_max = eligibility_unpivot.enrollment_date
-         left join medicare_state_fips
+         left join {{ref('ssa_fips_state')}} medicare_state_fips
             on eligibility_unpivot.state_code = medicare_state_fips.ssa_fips_state_code
 
 )

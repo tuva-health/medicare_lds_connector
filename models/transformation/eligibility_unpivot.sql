@@ -1,6 +1,6 @@
 with demographics as (
 
-    select * from {{ var('master_beneficiary_summary')}}
+    select * from {{ ref('master_beneficiary_summary')}}
 
 ),
 
@@ -11,6 +11,7 @@ unpivot_dual_status as (
         , right(month,2) as month
         , reference_year as year
         , dual_status as dual_status
+        , data_source
     from demographics
     unpivot(
             dual_status for month in (DUAL_STUS_CD_01
@@ -36,6 +37,7 @@ unpivot_medicare_status as (
         , right(month,2) as month
         , reference_year as year
         , medicare_status
+        , data_source
     from demographics
     unpivot(
             medicare_status for month in (MDCR_STATUS_CODE_01
@@ -72,11 +74,14 @@ select
           unpivot_dual_status.year
         , unpivot_dual_status.month
       ) as year_month
+    , demographics.data_source as data_source
 from demographics
      inner join unpivot_dual_status
          on demographics.desy_sort_key = unpivot_dual_status.desy_sort_key
          and demographics.reference_year = unpivot_dual_status.year
+         and demographics.data_source = unpivot_dual_status.data_source
      left join unpivot_medicare_status
          on unpivot_dual_status.desy_sort_key = unpivot_medicare_status.desy_sort_key
          and unpivot_dual_status.month = unpivot_medicare_status.month
          and unpivot_dual_status.year = unpivot_medicare_status.year
+         and unpivot_dual_status.data_source = unpivot_dual_status.data_source

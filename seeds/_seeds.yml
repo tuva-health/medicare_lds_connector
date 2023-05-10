@@ -1,0 +1,14 @@
+version: 2
+
+seeds:
+  - name: ssa_fips_state
+    config:
+      schema: |
+        {%- if  var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_medicare_lds{% else %}medicare_lds{%- endif -%}
+      alias: ssa_fips_state
+      tags: terminology
+      column_types:
+        ssa_fips_state_code : |
+          {%- if target.type == "bigquery" -%} string {%- else -%} varchar {%- endif -%}
+        ssa_fips_state_name : |
+          {%- if target.type == "bigquery" -%} string {%- else -%} varchar {%- endif -%}

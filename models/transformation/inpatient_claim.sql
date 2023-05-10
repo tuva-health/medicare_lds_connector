@@ -2,7 +2,7 @@ with inpatient_base_claim as (
 
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
-    from {{ var('inpatient_base_claim') }}
+    from {{ ref('inpatient_base_claim') }}
     where clm_mdcr_non_pmt_rsn_cd is null
     /** filter out denied claims **/
 ),
@@ -31,11 +31,12 @@ header_payment as (
         , /** medicare payment **/
           cast(clm_pmt_amt as {{ dbt.type_numeric() }}) + (cast(clm_pass_thru_per_diem_amt as {{ dbt.type_numeric() }}) * cast(clm_utlztn_day_cnt as {{ dbt.type_numeric() }}))
           /** beneficiary payment **/
-        + cast(nch_bene_ip_ddctbl_amt as {{ dbt.type_numeric() }}) + cast(nch_bene_pta_coinsrnc_lblty_am as {{ dbt.type_numeric() }}) + cast(nch_bene_blood_ddctbl_lblty_am as {{ dbt.type_numeric() }})
-          /** primary payer payment **/
-        + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
+            + cast(nch_bene_ip_ddctbl_amt as {{ dbt.type_numeric() }}) + cast(nch_bene_pta_coinsrnc_lblty_am as {{ dbt.type_numeric() }}) + cast(nch_bene_blood_ddctbl_lblty_am as {{ dbt.type_numeric() }})
+              /** primary payer payment **/
+            + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
             as total_cost_amount
         , cast(clm_tot_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
+        , data_source
     from add_claim_id
 
 ) 
@@ -183,11 +184,13 @@ select
     , {{ try_to_cast_date('b.prcdr_dt23', 'YYYYMMDD') }} as procedure_date_23
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
-    , 'medicare_lds' as data_source
+    , b.data_source as data_source
 from add_claim_id as b
-inner join {{ var('inpatient_revenue_center') }} as l
+inner join {{ ref('inpatient_revenue_center') }} as l
     on b.claim_no = l.claim_no
+    and b.data_source = l.data_source
 /* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
 left join header_payment p
     on b.claim_id = p.claim_id
-    and l.rev_cntr = '001'
+    and b.data_source = p.data_source
+    and l.rev_cntr in ('001', '0001')
