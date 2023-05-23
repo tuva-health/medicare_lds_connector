@@ -29,9 +29,8 @@ This connector is a dbt project that transforms raw Medicare SAF LDS claims data
 ### Getting Started
 Complete the following steps to configure the package to run in your environment.
 
-1. [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) this repo to your local machine or environment.
-2. Update the dbt_project.yml file to use the dbt profile connected to your data warehouse.
-3. Run `dbt build` command while specifying the specific database and schema locations you want to read/write data fromt/to: 
+1. Import this package into your project in packages.yml, either from [dbt hub](https://hub.getdbt.com/) 
+2. Run `dbt build` command while specifying the specific database and schema locations you want to read/write data fromt/to: 
 
     > dbt build --vars '{key: value, input_database: medicare, input_schema: saf, output_database: tuva, output_schema: claims_input}'
 

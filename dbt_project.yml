@@ -1,47 +1,11 @@
-name: 'medicare_saf_connector'
+name: 'medicare_lds_connector'
 version: '1.0.0'
 config-version: 2
+require-dbt-version: ">=1.2.0"
 
 
 profile: 'default'                      
 
-## Variables affecting the configuration of this project and the Tuva Project
-## packages are below.
-vars:
-
-#########################################
-#### Medicare SAF Project Variables ####
-#########################################
-  input_database: medicare-lds
-  input_schema:  raw_data
-
-  output_database: medicare-lds
-  output_schema: input_layer
-  
-########################################
-#### Tuva Project Package Variables ####
-########################################
-
-# Target Database Variable:
-  tuva_database: medicare-lds
-
-
-  ## Source Table Names
-  carrier_base_claim: "{{ source('saf','carrier_base_claim') }}"
-  carrier_claim_line: "{{ source('saf','carrier_claim_line') }}"
-  dme_base_claim: "{{ source('saf','dme_base_claim') }}"
-  dme_claim_line: "{{ source('saf','dme_claim_line') }}"
-  hha_base_claim: "{{ source('saf','hha_base_claim') }}"
-  hha_revenue_center: "{{ source('saf','hha_revenue_center') }}"
-  hospice_base_claim: "{{ source('saf','hospice_base_claim') }}"
-  hospice_revenue_center: "{{ source('saf','hospice_revenue_center') }}"
-  inpatient_base_claim: "{{ source('saf','inpatient_base_claim') }}"
-  inpatient_revenue_center: "{{ source('saf','inpatient_revenue_center') }}"
-  master_beneficiary_summary: "{{ source('saf','master_beneficiary_summary') }}"
-  outpatient_base_claim: "{{ source('saf','outpatient_base_claim') }}"
-  outpatient_revenue_center: "{{ source('saf','outpatient_revenue_center') }}"
-  snf_base_claim: "{{ source('saf','snf_base_claim') }}"
-  snf_revenue_center: "{{ source('saf','snf_revenue_center') }}"
 
 
 model-paths: ["models"]
@@ -57,7 +21,7 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "dbt_packages"
 
 models:
-  medicare_saf_connector:
+  medicare_lds_connector:
     +materialized: view
     core:
       +materialized: table

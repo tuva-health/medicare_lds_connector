@@ -1,4 +1,4 @@
-name: 'integration_tests'
+name: 'input_layer'
 version: '1.0.0'
 config-version: 2
 
@@ -11,7 +11,7 @@ profile: 'default'
 
 dispatch:
   - macro_namespace: dbt
-    search_order: [ 'medicare_saf_connector', 'dbt']
+    search_order: [ 'medicare_lds_connector', 'dbt']
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -30,8 +30,7 @@ clean-targets:
 
 
 models:
-  integration_tests:
+  input_layer:
     +materialized: ephemeral
 #  the_tuva_project:
 #    +database: tuva_test
-  
