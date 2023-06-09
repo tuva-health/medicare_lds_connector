@@ -15,15 +15,12 @@ vars:
   input_database: medicare-lds
   input_schema:  raw_data
 
-  output_database: medicare-lds
-  output_schema: input_layer
-  
 ########################################
 #### Tuva Project Package Variables ####
 ########################################
 
 # Target Database Variable:
-  tuva_database: medicare-lds
+  tuva_database: test
 
 
   ## Source Table Names
