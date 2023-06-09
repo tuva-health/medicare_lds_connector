@@ -12,7 +12,7 @@ vars:
 #########################################
 #### Medicare SAF Project Variables ####
 #########################################
-  input_database: medicare-lds
+  input_database: medicare_lds
   input_schema:  raw_data
 
 ########################################
@@ -20,7 +20,7 @@ vars:
 ########################################
 
 # Target Database Variable:
-  tuva_database: test
+  tuva_database: medicare_lds
 
 
   ## Source Table Names
