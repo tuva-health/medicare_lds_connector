@@ -3,7 +3,8 @@ name: dbt_v1.4.6_snowflake_build_full_refresh
 on:
   workflow_dispatch:
   pull_request:
-
+    branches:
+      - main
 env:
   DBT_SNOWFLAKE_CI_ACCOUNT: ${{ secrets.DBT_SNOWFLAKE_CI_ACCOUNT }}
   DBT_SNOWFLAKE_CI_DATABASE: ${{ secrets.DBT_SNOWFLAKE_CI_DATABASE }}
