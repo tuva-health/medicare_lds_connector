@@ -2,7 +2,7 @@ with hha_base_claim as (
 
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
-    from {{ var('hha_base_claim') }}
+    from {{ source('medicare_lds','hha_base_claim') }}
     where clm_mdcr_non_pmt_rsn_cd is null
     /** filter out denied claims **/
 )
@@ -164,7 +164,7 @@ select
     , date(NULL) as procedure_date_25
     , 'medicare_lds' as data_source
 from hha_base_claim as b
-inner join {{ var('hha_revenue_center') }} as l
+inner join {{ source('medicare_lds','hha_revenue_center') }} as l
     on b.claim_no = l.claim_no
 /* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
 left join header_payment p
