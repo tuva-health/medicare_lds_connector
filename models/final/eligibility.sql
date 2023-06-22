@@ -162,7 +162,7 @@ joined as (
         , cast(medicare_state_fips.ssa_fips_state_name as {{ dbt.type_string() }} ) as state
         , cast(NULL as {{ dbt.type_string() }} ) as zip_code
         , cast(NULL as {{ dbt.type_string() }} ) as phone
-        , 'saf' as data_source
+        , 'medicare_lds' as data_source
     from enrollment_span
          left join eligibility_unpivot
             on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key
