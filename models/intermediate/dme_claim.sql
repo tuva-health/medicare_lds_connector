@@ -2,7 +2,7 @@ with dme_base_claim as (
 
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
-    from {{ var('dme_base_claim') }}
+    from {{ source('medicare_lds','dme_base_claim') }}
     where carr_clm_pmt_dnl_cd <> '0'
     /** filter out denied claims **/
 )
@@ -159,5 +159,5 @@ select
     , date(NULL) as procedure_date_25
     , 'medicare_lds' as data_source
 from dme_base_claim as b
-inner join {{ var('dme_claim_line') }} as l
+inner join {{ source('medicare_lds','dme_claim_line') }} as l
     on b.claim_no = l.claim_no
