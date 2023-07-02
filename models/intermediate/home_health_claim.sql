@@ -169,4 +169,4 @@ inner join {{ source('medicare_lds','hha_revenue_center') }} as l
 /* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
 left join header_payment p
     on b.claim_no = p.claim_id
-    and l.rev_cntr = '001'
+    and l.rev_cntr = '0001'
