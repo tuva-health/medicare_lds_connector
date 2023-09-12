@@ -31,12 +31,7 @@ Next you need to tell dbt where your Medicare LDS source data is located.  Do th
 <br/><br/> 
 
 ### Step 4: Run
-Now you're ready to run the connector and the Tuva Project.  For example, using dbt CLI you would `cd` to the project root folder in the command line and execute `dbt build`.  Next you're now ready to do claims data analytics!  Check out the [data mart](https://thetuvaproject.com/data-marts/about) in our docs to learn what tables you should query.
-<br/><br/>
-
-## 🙋🏻‍♀️ How do I contribute?
-Have an opinion on the mappings? Notice any bugs when installing and running the project?
-If so, we highly encourage and welcome feedback!  While we work on a formal process in Github, we can be easily reached on our Slack community.
+Now you're ready to run the connector and the Tuva Project.  For example, using dbt CLI you would `cd` to the project root folder in the command line and execute `dbt build`.  Next you're now ready to do claims data analytics!  Check out the [data marts](https://thetuvaproject.com/data-marts/about) in our docs to learn what tables you should query.
 <br/><br/>
 
 ## 🤝 Join our community!
