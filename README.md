@@ -23,7 +23,7 @@ Unlike [the Tuva Project](https://github.com/tuva-health/the_tuva_project), this
 <br/><br/> 
 
 ### Step 2: Import the Tuva Project
-Next you need to import the Tuva Project dbt package into the Medicare CCLF Connector dbt project.  For example, using dbt CLI you would `cd` into the directly where you cloned this project to and run `dbt deps` to import the latest version of the Tuva Project.
+Next you need to import the Tuva Project dbt package into the Medicare LDS Connector dbt project.  For example, using dbt CLI you would `cd` into the directly where you cloned this project to and run `dbt deps` to import the latest version of the Tuva Project.
 <br/><br/> 
 
 ### Step 3: Configure Input Database and Schema
