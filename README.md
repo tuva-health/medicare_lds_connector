@@ -7,7 +7,7 @@ Check out our [docs](https://thetuvaproject.com/) to learn about the project and
 <br/><br/>
 
 ## 🧰  What does this repo do?
-The Medicare LDS Connector is a dbt project that maps raw Medicare LDS claims data to the Tuva claims data model and then builds all of the Tuva data marts.  This connector expects your LDS data to be organized into the tables outlined in the [LDS] data dictionaries](https://www.cms.gov/Research-Statistics-Data-and-Systems/Files-for-Order/LimitedDataSets/StandardAnalyticalFiles).
+The Medicare LDS Connector is a dbt project that maps Medicare LDS claims data to the Tuva [claims data model](https://thetuvaproject.com/claims-data/data-model/about) which then makes it simple to run the entire [Tuva Project](https://github.com/tuva-health/the_tuva_project).  This connector expects your LDS data to be organized into the tables outlined in the [LDS data dictionaries](https://www.cms.gov/Research-Statistics-Data-and-Systems/Files-for-Order/LimitedDataSets/StandardAnalyticalFiles).
 <br/><br/>  
 
 ## 🔌 Database Support
