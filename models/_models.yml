@@ -6,28 +6,28 @@ models:
   - name: eligibility
     description: Member eligibility at the month grain
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
 
   - name: medical_claim
     description: Claim line details of all claim types
     config:
-      schema: tuva_claims    
+      schema: _tuva_claims
 
   - name: pharmacy_claim
     description: Claim line details of all claim types
     config:
-      schema: tuva_claims    
+      schema: _tuva_claims
 
 ### intermediate
   - name: carrier_claim
     description: Claim line details of carrier claims
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
 
   - name: dme_claim
     description: Claim line details of durable medical equipment claims
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
 
   - name: eligibility_unpivot
     description: >
@@ -35,29 +35,29 @@ models:
       on DUAL_STUS_CD and MDCR_STATUS_CODE creating a row for each year/month 
       of eligibility.
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
 
   - name: home_health_claim
     description: Claim line details of home health claims
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
 
   - name: hospice_claim
     description: Claim line details of hospice claims
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
 
   - name: inpatient_claim
     description: Claim line details of inpatient claims
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
 
   - name: outpatient_claim
     description: Claim line details of outpatient claims
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
 
   - name: snf_claim
     description: Claim line details of skilled nursing facility claims
     config:
-      schema: tuva_claims
+      schema: _tuva_claims
