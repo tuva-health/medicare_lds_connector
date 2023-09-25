@@ -1,5 +1,5 @@
 name: 'medicare_lds_connector'
-version: '0.1.0'
+version: '0.1.1'
 config-version: 2
 
 profile: default                   
@@ -7,6 +7,8 @@ profile: default
 vars:
   input_database: default
   input_schema:  default
+
+  claims_enabled: true
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
