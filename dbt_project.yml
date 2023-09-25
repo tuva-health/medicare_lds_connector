@@ -1,5 +1,5 @@
 name: 'medicare_lds_connector'
-version: '0.1.2'
+version: '0.1.1'
 config-version: 2
 
 profile: default                   
