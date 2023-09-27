@@ -8,18 +8,21 @@ models:
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_tuva_claims{% else %}_tuva_claims{%- endif -%}
+      materialized: table
 
   - name: medical_claim
     description: Claim line details of all claim types
     config:
       schema: |
-        {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_tuva_claims{% else %}_tuva_claims{%- endif -%}    
+        {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_tuva_claims{% else %}_tuva_claims{%- endif -%}
+      materialized: table
 
   - name: pharmacy_claim
     description: Claim line details of all claim types
     config:
       schema: |
-        {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_tuva_claims{% else %}_tuva_claims{%- endif -%}    
+        {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_tuva_claims{% else %}_tuva_claims{%- endif -%}
+      materialized: table
 
 ### intermediate
   - name: carrier_claim
