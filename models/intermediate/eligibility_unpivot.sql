@@ -64,6 +64,7 @@ select
     , demographics.hi_coverage as hi_coverage
     , demographics.smi_coverage as smi_coverage
     , demographics.hmo_coverage as hmo_coverage
+    , demographics.orig_reason_for_entitlement as orig_reason_for_entitlement
     , unpivot_dual_status.dual_status as dual_status
     , unpivot_medicare_status.medicare_status as medicare_status
     , unpivot_dual_status.month as month
