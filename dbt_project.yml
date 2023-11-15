@@ -5,8 +5,8 @@ config-version: 2
 profile: default                   
 
 vars:
-  input_database: default
-  input_schema:  default
+  input_database: medicare_lds_five_percent
+  input_schema:  raw_data
 
   claims_enabled: true
 

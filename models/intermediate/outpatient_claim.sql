@@ -31,6 +31,8 @@ select
     , 'institutional' as claim_type
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as patient_id
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
+    , cast('medicare' as {{ dbt.type_string() }} ) as payer
+    , cast('medicare' as {{ dbt.type_string() }} ) as plan
     , date(NULL) as claim_start_date
     , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
     , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_start_date
@@ -59,13 +61,16 @@ select
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
     , cast(b.srvc_loc_npi_num as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
+    , cast(NULL as {{ dbt.type_numeric() }}) as allowed_amount
+    , p.charge_amount as charge_amount
+    , cast(null as {{ dbt.type_numeric() }}) as coinsurance_amount
+    , cast(null as {{ dbt.type_numeric() }}) as copayment_amount
+    , cast(null as {{ dbt.type_numeric() }}) as deductible_amount
     , coalesce(
             p.paid_amount
             , cast(0 as {{ dbt.type_numeric() }})
       ) as paid_amount
     , p.total_cost_amount as total_cost_amount
-    , cast(NULL as {{ dbt.type_numeric() }}) as allowed_amount
-    , p.charge_amount as charge_amount
     , 'icd-10-cm' as diagnosis_code_type
     , cast(b.prncpal_dgns_cd as {{ dbt.type_string() }} ) as diagnosis_code_1
     , cast(b.icd_dgns_cd2 as {{ dbt.type_string() }} ) as diagnosis_code_2
