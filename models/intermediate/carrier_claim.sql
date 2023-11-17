@@ -18,6 +18,8 @@ select
     , 'professional' as claim_type
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as patient_id
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
+    , cast('medicare' as {{ dbt.type_string() }} ) as payer
+    , cast('medicare' as {{ dbt.type_string() }} ) as plan
     , date(NULL) as claim_start_date
     , {{try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD')}} as claim_end_date
     , date(NULL) as claim_line_start_date
@@ -44,6 +46,11 @@ select
     , cast(null as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
     , cast(l.line_nch_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
+    , cast(null as {{ dbt.type_numeric() }}) as allowed_amount
+    , cast(l.line_alowd_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
+    , cast(null as {{ dbt.type_numeric() }}) as coinsurance_amount
+    , cast(null as {{ dbt.type_numeric() }}) as copayment_amount
+    , cast(null as {{ dbt.type_numeric() }}) as deductible_amount
     , /** medicare payment **/
       cast(line_nch_pmt_amt as {{ dbt.type_numeric() }}) 
       /** beneficiary payment **/
@@ -51,8 +58,6 @@ select
       /** primary payer payment **/
       + cast(line_bene_prmry_pyr_pd_amt as {{ dbt.type_numeric() }})
     as total_cost_amount
-    , cast(null as {{ dbt.type_numeric() }}) as allowed_amount
-    , cast(l.line_alowd_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
     , case when b.prncpal_dgns_vrsn_cd = '0' then 'icd-10-cm'
            when b.prncpal_dgns_vrsn_cd = '9' then 'icd-9-cm'
            when b.prncpal_dgns_vrsn_cd is null then 'icd-9-cm'
