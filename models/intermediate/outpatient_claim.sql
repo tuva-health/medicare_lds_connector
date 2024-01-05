@@ -61,15 +61,15 @@ select
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
     , cast(b.srvc_loc_npi_num as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
+    , coalesce(
+            p.paid_amount
+            , cast(0 as {{ dbt.type_numeric() }})
+      ) as paid_amount
     , cast(NULL as {{ dbt.type_numeric() }}) as allowed_amount
     , p.charge_amount as charge_amount
     , cast(null as {{ dbt.type_numeric() }}) as coinsurance_amount
     , cast(null as {{ dbt.type_numeric() }}) as copayment_amount
     , cast(null as {{ dbt.type_numeric() }}) as deductible_amount
-    , coalesce(
-            p.paid_amount
-            , cast(0 as {{ dbt.type_numeric() }})
-      ) as paid_amount
     , p.total_cost_amount as total_cost_amount
     , 'icd-10-cm' as diagnosis_code_type
     , cast(b.prncpal_dgns_cd as {{ dbt.type_string() }} ) as diagnosis_code_1
