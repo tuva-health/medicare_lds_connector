@@ -10,6 +10,10 @@ vars:
 
   claims_enabled: true
 
+  # Default values for data marts, update as needed
+  cms_hcc_payment_year: 2021
+  quality_measures_period_end: "2020-12-31"
+
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
