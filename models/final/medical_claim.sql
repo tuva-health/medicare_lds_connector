@@ -1,13 +1,5 @@
-select * from {{ ref('carrier_claim')}}
-union all
-select * from {{ ref('dme_claim')}}
-union all
-select * from {{ ref('home_health_claim')}}
-union all
-select * from {{ ref('hospice_claim')}}
-union all
-select * from {{ ref('inpatient_claim')}}
-union all
-select * from {{ ref('outpatient_claim')}}
-union all
-select * from {{ ref('snf_claim')}}
+{{ dbt_utils.union_relations(
+    relations=[ref('carrier_claim'), ref('dme_claim'), ref('home_health_claim'), ref('hospice_claim')
+        , ref('inpatient_claim'), ref('outpatient_claim'), ref('snf_claim')],
+    exclude=["_DBT_SOURCE_RELATION"]
+) }}
