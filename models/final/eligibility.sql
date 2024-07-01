@@ -15,7 +15,7 @@ with eligibility_unpivot as (
 
 medicare_state_fips as (
 
-    select * from {{ ref('terminology__ssa_fips_state') }}
+    select * from {{ ref('reference_data__ssa_fips_state') }}
 
 ),
 
@@ -29,8 +29,9 @@ add_row_num as (
             order by enrollment_date
           ) as row_num
         , case
-            when medicare_status in (null, '00')
-            and dual_status in (null, '00', '99', 'NA') then 1
+            when medicare_status in (null, '00') and dual_status in (null, '00', '99', 'NA') then 1
+            when hmo_status <> '0' then 1 --  MA coverage
+            when entitlement not in ('3','C') then 1 --Doesn't have both Part A and B
             else 0
           end as disenrolled_flag
     from eligibility_unpivot
@@ -128,7 +129,8 @@ joined as (
 
     select
           cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as patient_id
-        , cast(NULL as {{ dbt.type_string() }} ) as member_id
+        , cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as member_id
+        , cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as subscriber_id
         , case eligibility_unpivot.sex_code
                when '0' then 'unknown'
                when '1' then 'male'
@@ -159,12 +161,18 @@ joined as (
         , cast(eligibility_unpivot.medicare_status as {{ dbt.type_string() }} ) as medicare_status_code
         , cast(NULL as {{ dbt.type_string() }} ) as first_name
         , cast(NULL as {{ dbt.type_string() }} ) as last_name
+        , cast(NULL as {{ dbt.type_string() }} ) as social_security_number
+        , 'self' as subscriber_relation
         , cast(NULL as {{ dbt.type_string() }} ) as address
         , cast(NULL as {{ dbt.type_string() }} ) as city
         , cast(medicare_state_fips.ssa_fips_state_name as {{ dbt.type_string() }} ) as state
         , cast(NULL as {{ dbt.type_string() }} ) as zip_code
         , cast(NULL as {{ dbt.type_string() }} ) as phone
         , 'medicare_lds' as data_source
+        , 'master_beneficiary_summary' as file_name
+        , cast(NULL as date ) as ingest_datetime
+        
+
     from enrollment_span
          left join eligibility_unpivot
             on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key

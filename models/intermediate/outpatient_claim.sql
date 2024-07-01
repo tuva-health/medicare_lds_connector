@@ -21,6 +21,14 @@ with outpatient_base_claim as (
     from outpatient_base_claim
 )
 
+, claim_start_date as (
+
+  select l.claim_no
+  ,min(coalesce(l.rev_cntr_dt,l.clm_thru_dt)) as claim_start_date
+  from {{ source('medicare_lds','outpatient_revenue_center') }} l
+  group by l.claim_no
+)
+
 select
       /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
       cast(b.claim_no as {{ dbt.type_string() }} )
@@ -33,7 +41,7 @@ select
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
     , cast('medicare' as {{ dbt.type_string() }} ) as payer
     , cast('medicare' as {{ dbt.type_string() }} ) as plan
-    , date(NULL) as claim_start_date
+    , {{ try_to_cast_date('c.claim_start_date', 'YYYYMMDD') }} as claim_start_date
     , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
     , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_start_date
     , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_end_date
@@ -174,6 +182,9 @@ select
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
     , 'medicare_lds' as data_source
+    , 1 as in_network_flag
+    , 'outpatient_claim' as file_name
+    , cast(NULL as date ) as ingest_datetime
 from outpatient_base_claim as b
 inner join {{ source('medicare_lds','outpatient_revenue_center') }} as l
     on b.claim_no = l.claim_no
@@ -181,3 +192,4 @@ inner join {{ source('medicare_lds','outpatient_revenue_center') }} as l
 left join header_payment p
     on b.claim_no = p.claim_id
     and l.rev_cntr = '0001'
+left join claim_start_date c on b.claim_no = c.claim_no
