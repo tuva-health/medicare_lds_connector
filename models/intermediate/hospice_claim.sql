@@ -64,7 +64,7 @@ select
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
     , cast(l.rev_cntr_rndrng_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
-    , cast(b.srvc_loc_npi_num as {{ dbt.type_string() }} ) as facility_npi
+    , cast(coalesce(b.org_npi_num,b.srvc_loc_npi_num) as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
     , p.paid_amount as paid_amount
     , cast(NULL as {{ dbt.type_numeric() }}) as allowed_amount
