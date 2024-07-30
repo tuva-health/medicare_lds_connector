@@ -146,9 +146,9 @@ from demographics
          and unpivot_dual_status.year = unpivot_medicare_status.year
      left join unpivot_hmo_status
          on unpivot_dual_status.desy_sort_key = unpivot_hmo_status.desy_sort_key
-         and unpivot_dual_status.month = cast(unpivot_hmo_status.month as int)
+         and cast(unpivot_dual_status.month as int) = cast(unpivot_hmo_status.month as int)
          and unpivot_dual_status.year = unpivot_hmo_status.year
      left join unpivot_entitlement
          on unpivot_dual_status.desy_sort_key = unpivot_entitlement.desy_sort_key
-         and unpivot_dual_status.month = cast(unpivot_entitlement.month as int)
+         and cast(unpivot_dual_status.month as int) = cast(unpivot_entitlement.month as int)
          and unpivot_dual_status.year = unpivot_entitlement.year
