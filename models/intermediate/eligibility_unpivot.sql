@@ -59,8 +59,8 @@ unpivot_medicare_status as (
 unpivot_hmo_status as (
     select
           desy_sort_key
-        , case when len(month) = 14 then substring(month, 14, 1)  -- 'entitlement_buy_in_ind1' -> '1'
-               when len(month) = 15 then substring(month, 14, 2)  -- 'entitlement_buy_in_ind10' -> '10'
+        , case when LENGTH(month) = 14 then substring(month, 14, 1)  -- 'entitlement_buy_in_ind1' -> '1'
+               when LENGTH(month) = 15 then substring(month, 14, 2)  -- 'entitlement_buy_in_ind10' -> '10'
                else null end as month
         , reference_year as year
         , hmo_status
@@ -90,8 +90,8 @@ unpivot_entitlement as (
 
     select
           desy_sort_key
-        , case when len(month) = 23 then substring(month, 23, 1)  -- 'entitlement_buy_in_ind1' -> '1'
-               when len(month) = 24 then substring(month, 23, 2)  -- 'entitlement_buy_in_ind10' -> '10'
+        , case when LENGTH(month) = 23 then substring(month, 23, 1)  -- 'entitlement_buy_in_ind1' -> '1'
+               when LENGTH(month) = 24 then substring(month, 23, 2)  -- 'entitlement_buy_in_ind10' -> '10'
                else null end as month
         , reference_year as year
         , entitlement
