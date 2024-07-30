@@ -13,6 +13,7 @@ select
     ,cast(null as int) as DAYS_SUPPLY
     ,cast(null as int) as REFILLS
     ,cast(null as date) as PAID_DATE
+    ,cast(null as numeric) as CHARGE_AMOUNT
     ,cast(null as numeric) as PAID_AMOUNT
     ,cast(null as numeric) as ALLOWED_AMOUNT
     ,cast(null as numeric) as COPAYMENT_AMOUNT

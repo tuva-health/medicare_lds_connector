@@ -24,6 +24,8 @@ inner join month_start_and_end_dates b
 
 -- limit claims to only enrolled members, removing claims for members that we only have partial claims data for.
 select c.*
+,cast(null as {{ dbt.type_string() }} ) as rendering_tin
+,cast(null as {{ dbt.type_string() }} ) as billing_tin
 from {{ ref('_int_medical_claim') }} c
 inner join member_months mm on c.patient_id = mm.patient_id
 and
