@@ -54,6 +54,67 @@ unpivot_medicare_status as (
 
 )
 
+,
+
+unpivot_hmo_status as (
+    select
+          desy_sort_key
+        , case when LENGTH(month) = 14 then substring(month, 14, 1)  -- 'entitlement_buy_in_ind1' -> '1'
+               when LENGTH(month) = 15 then substring(month, 14, 2)  -- 'entitlement_buy_in_ind10' -> '10'
+               else null end as month
+        , reference_year as year
+        , hmo_status
+    from demographics
+    unpivot(
+            hmo_status for month in (HMO_INDICATOR1
+                                          ,HMO_INDICATOR2
+                                          ,HMO_INDICATOR3
+                                          ,HMO_INDICATOR4
+                                          ,HMO_INDICATOR5
+                                          ,HMO_INDICATOR6
+                                          ,HMO_INDICATOR7
+                                          ,HMO_INDICATOR8
+                                          ,HMO_INDICATOR9
+                                          ,HMO_INDICATOR10
+                                          ,HMO_INDICATOR11
+                                          ,HMO_INDICATOR12
+                                          )
+            )p1
+
+
+)
+
+,
+
+unpivot_entitlement as (
+
+    select
+          desy_sort_key
+        , case when LENGTH(month) = 23 then substring(month, 23, 1)  -- 'entitlement_buy_in_ind1' -> '1'
+               when LENGTH(month) = 24 then substring(month, 23, 2)  -- 'entitlement_buy_in_ind10' -> '10'
+               else null end as month
+        , reference_year as year
+        , entitlement
+    from demographics
+    unpivot(
+            entitlement for month in (entitlement_buy_in_ind1
+                                          ,entitlement_buy_in_ind2
+                                          ,entitlement_buy_in_ind3
+                                          ,entitlement_buy_in_ind4
+                                          ,entitlement_buy_in_ind5
+                                          ,entitlement_buy_in_ind6
+                                          ,entitlement_buy_in_ind7
+                                          ,entitlement_buy_in_ind8
+                                          ,entitlement_buy_in_ind9
+                                          ,entitlement_buy_in_ind10
+                                          ,entitlement_buy_in_ind11
+                                          ,entitlement_buy_in_ind12
+                                          )
+            )p1
+
+)
+
+
 select
       demographics.desy_sort_key as desy_sort_key
     , demographics.age as age
@@ -73,6 +134,8 @@ select
           unpivot_dual_status.year
         , unpivot_dual_status.month
       ) as year_month
+    , unpivot_hmo_status.hmo_status
+    , unpivot_entitlement.entitlement
 from demographics
      inner join unpivot_dual_status
          on demographics.desy_sort_key = unpivot_dual_status.desy_sort_key
@@ -81,3 +144,11 @@ from demographics
          on unpivot_dual_status.desy_sort_key = unpivot_medicare_status.desy_sort_key
          and unpivot_dual_status.month = unpivot_medicare_status.month
          and unpivot_dual_status.year = unpivot_medicare_status.year
+     left join unpivot_hmo_status
+         on unpivot_dual_status.desy_sort_key = unpivot_hmo_status.desy_sort_key
+         and cast(unpivot_dual_status.month as int) = cast(unpivot_hmo_status.month as int)
+         and unpivot_dual_status.year = unpivot_hmo_status.year
+     left join unpivot_entitlement
+         on unpivot_dual_status.desy_sort_key = unpivot_entitlement.desy_sort_key
+         and cast(unpivot_dual_status.month as int) = cast(unpivot_entitlement.month as int)
+         and unpivot_dual_status.year = unpivot_entitlement.year

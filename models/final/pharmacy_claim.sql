@@ -13,10 +13,14 @@ select
     ,cast(null as int) as DAYS_SUPPLY
     ,cast(null as int) as REFILLS
     ,cast(null as date) as PAID_DATE
+    ,cast(null as numeric) as CHARGE_AMOUNT
     ,cast(null as numeric) as PAID_AMOUNT
     ,cast(null as numeric) as ALLOWED_AMOUNT
     ,cast(null as numeric) as COPAYMENT_AMOUNT
     ,cast(null as numeric) as COINSURANCE_AMOUNT
     ,cast(null as numeric) as DEDUCTIBLE_AMOUNT
     ,cast(null as {{ dbt.type_string() }}) as DATA_SOURCE
+    ,cast(null as numeric) as in_network_flag
+    ,cast(null as {{ dbt.type_string() }}) as file_name
+    ,cast(NULL as date ) as ingest_datetime
 limit 0

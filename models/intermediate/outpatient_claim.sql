@@ -21,6 +21,14 @@ with outpatient_base_claim as (
     from outpatient_base_claim
 )
 
+, claim_start_date as (
+
+  select l.claim_no
+  ,min(coalesce(l.rev_cntr_dt,l.clm_thru_dt)) as claim_start_date
+  from {{ source('medicare_lds','outpatient_revenue_center') }} l
+  group by l.claim_no
+)
+
 select
       /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
       cast(b.claim_no as {{ dbt.type_string() }} )
@@ -33,7 +41,7 @@ select
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
     , cast('medicare' as {{ dbt.type_string() }} ) as payer
     , cast('medicare' as {{ dbt.type_string() }} ) as plan
-    , date(NULL) as claim_start_date
+    , {{ try_to_cast_date('c.claim_start_date', 'YYYYMMDD') }} as claim_start_date
     , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
     , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_start_date
     , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_end_date
@@ -59,17 +67,17 @@ select
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
     , cast(b.rndrng_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
-    , cast(b.srvc_loc_npi_num as {{ dbt.type_string() }} ) as facility_npi
+    , cast(coalesce(b.org_npi_num,b.srvc_loc_npi_num) as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
+    , coalesce(
+            p.paid_amount
+            , cast(0 as {{ dbt.type_numeric() }})
+      ) as paid_amount
     , cast(NULL as {{ dbt.type_numeric() }}) as allowed_amount
     , p.charge_amount as charge_amount
     , cast(null as {{ dbt.type_numeric() }}) as coinsurance_amount
     , cast(null as {{ dbt.type_numeric() }}) as copayment_amount
     , cast(null as {{ dbt.type_numeric() }}) as deductible_amount
-    , coalesce(
-            p.paid_amount
-            , cast(0 as {{ dbt.type_numeric() }})
-      ) as paid_amount
     , p.total_cost_amount as total_cost_amount
     , 'icd-10-cm' as diagnosis_code_type
     , cast(b.prncpal_dgns_cd as {{ dbt.type_string() }} ) as diagnosis_code_1
@@ -174,6 +182,9 @@ select
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
     , 'medicare_lds' as data_source
+    , 1 as in_network_flag
+    , 'outpatient_claim' as file_name
+    , cast(NULL as date ) as ingest_datetime
 from outpatient_base_claim as b
 inner join {{ source('medicare_lds','outpatient_revenue_center') }} as l
     on b.claim_no = l.claim_no
@@ -181,3 +192,4 @@ inner join {{ source('medicare_lds','outpatient_revenue_center') }} as l
 left join header_payment p
     on b.claim_no = p.claim_id
     and l.rev_cntr = '0001'
+left join claim_start_date c on b.claim_no = c.claim_no

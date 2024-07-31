@@ -32,7 +32,7 @@ select
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
     , cast('medicare' as {{ dbt.type_string() }} ) as payer
     , cast('medicare' as {{ dbt.type_string() }} ) as plan
-    , date(NULL) as claim_start_date
+    , {{ try_to_cast_date('b.clm_admsn_dt', 'YYYYMMDD') }} as claim_start_date
     , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
     , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_start_date
     , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
@@ -57,7 +57,7 @@ select
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_4
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
     , cast(b.rndrng_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
-    , cast(NULL as {{ dbt.type_string() }} ) as billing_npi
+    , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
     , coalesce(p.paid_amount,cast(0 as {{ dbt.type_numeric() }})) as paid_amount
@@ -170,6 +170,9 @@ select
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
     , 'medicare_lds' as data_source
+    , 1 as in_network_flag
+    , 'inpatient_claim' as file_name
+    , cast(NULL as date ) as ingest_datetime
 from add_claim_id as b
 inner join {{ source('medicare_lds','inpatient_revenue_center') }} as l
     on b.claim_no = l.claim_no

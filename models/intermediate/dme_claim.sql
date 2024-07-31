@@ -7,6 +7,14 @@ with dme_base_claim as (
     /** filter out denied claims **/
 )
 
+, claim_start_date as (
+
+  select l.claim_no
+  ,min(l.line_last_expns_dt) as claim_start_date
+  from {{ source('medicare_lds','dme_claim_line') }} l
+  group by l.claim_no
+)
+
 select
       /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
       cast(b.claim_no as {{ dbt.type_string() }} )
@@ -19,10 +27,10 @@ select
     , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
     , cast('medicare' as {{ dbt.type_string() }} ) as payer
     , cast('medicare' as {{ dbt.type_string() }} ) as plan
-    , date(NULL) as claim_start_date
+    , {{ try_to_cast_date('c.claim_start_date', 'YYYYMMDD') }} as claim_start_date
     , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
-    , date(NULL) as claim_line_start_date
-    , {{ try_to_cast_date('l.clm_thru_dt', 'YYYYMMDD') }} as claim_line_end_date
+    , {{ try_to_cast_date('l.line_last_expns_dt', 'YYYYMMDD') }} as claim_line_start_date
+    , {{ try_to_cast_date('l.line_last_expns_dt', 'YYYYMMDD') }} as claim_line_end_date
     , date(NULL) as admission_date
     , date(NULL) as discharge_date
     , cast(NULL as {{ dbt.type_string() }} ) as admit_source_code
@@ -163,6 +171,10 @@ select
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
     , 'medicare_lds' as data_source
+    , 1 as in_network_flag
+    , 'dme_claim' as file_name
+    , cast(NULL as date ) as ingest_datetime    
 from dme_base_claim as b
 inner join {{ source('medicare_lds','dme_claim_line') }} as l
     on b.claim_no = l.claim_no
+inner join claim_start_date c on b.claim_no = c.claim_no
