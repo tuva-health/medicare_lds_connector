@@ -68,4 +68,6 @@ select
     , clm_next_gnrtn_aco_ind_cd3
     , clm_next_gnrtn_aco_ind_cd4
     , clm_next_gnrtn_aco_ind_cd5
+    , file_name
+    , ingest_datetime
 from {{ source('medicare_lds','carrier_claim_line') }}

@@ -56,4 +56,6 @@ select
     , line_othr_apld_amt5
     , line_othr_apld_amt6
     , line_othr_apld_amt7
+    , file_name
+    , ingest_datetime
 from {{ source('medicare_lds','dme_claim_line') }}

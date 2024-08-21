@@ -52,4 +52,6 @@ select
     , cwf_bene_mdcr_stus_cd
     , clm_bene_pd_amt
     , aco_id_num
+    , file_name
+    , ingest_datetime
 from {{ source('medicare_lds','dme_base_claim') }}

@@ -40,4 +40,6 @@ select
     , thrpy_cap_ind_cd1
     , thrpy_cap_ind_cd2
     , rc_ptnt_add_on_pymt_amt
+    , file_name
+    , ingest_datetime
 from {{ source('medicare_lds','outpatient_revenue_center') }}

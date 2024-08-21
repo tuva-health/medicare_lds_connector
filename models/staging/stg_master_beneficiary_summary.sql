@@ -78,4 +78,6 @@ select
     , dual_stus_cd_10
     , dual_stus_cd_11
     , dual_stus_cd_12
+    , file_name
+    , ingest_datetime
 from {{ source('medicare_lds','master_beneficiary_summary') }}

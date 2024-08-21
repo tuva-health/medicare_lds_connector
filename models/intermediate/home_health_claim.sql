@@ -5,26 +5,32 @@ with hha_base_claim as (
     from {{ ref('stg_hha_base_claim') }}
     where clm_mdcr_non_pmt_rsn_cd is null
     /** filter out denied claims **/
+
 )
+
 , header_payment as (
+
     select
-        claim_no as claim_id
+          claim_no as claim_id
         , cast(clm_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
         , /** medicare payment **/
           cast(clm_pmt_amt as {{ dbt.type_numeric() }}) 
-          /** primary payer payment **/
-          + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
-        as total_cost_amount
+              /** primary payer payment **/
+              + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
+          as total_cost_amount
         , cast(clm_tot_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
     from hha_base_claim
+
 )
 
 , claim_start_date as (
 
-  select l.claim_no
-  ,min(coalesce(l.rev_cntr_dt,l.clm_thru_dt)) as claim_start_date
-  from {{ ref('stg_hha_revenue_center') }} l
-  group by l.claim_no
+    select
+          claim_no
+        , min(coalesce(rev_cntr_dt,clm_thru_dt)) as claim_start_date
+    from {{ ref('stg_hha_revenue_center') }}
+    group by claim_no
+
 )
 
 select
@@ -64,7 +70,9 @@ select
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_4
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
     , cast(l.rev_cntr_rndrng_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
+    , cast(NULL as {{ dbt.type_string() }} ) as rendering_tin
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
+    , cast(NULL as {{ dbt.type_string() }} ) as billing_tin
     , cast(coalesce(b.org_npi_num,b.srvc_loc_npi_num) as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
     , p.paid_amount as paid_amount
@@ -177,14 +185,15 @@ select
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
     , 'medicare_lds' as data_source
-    , 1 as in_network_flag
-    , 'home_health_claim' as file_name
-    , cast(NULL as date ) as ingest_datetime
+    , cast(1 as int) as in_network_flag
+    , cast(b.file_name as {{ dbt.type_string() }} ) as file_name
+    , cast(b.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
 from hha_base_claim as b
-inner join {{ ref('stg_hha_revenue_center') }} as l
-    on b.claim_no = l.claim_no
-/* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
-left join header_payment p
-    on b.claim_no = p.claim_id
-    and l.rev_cntr = '0001'
-left join claim_start_date s on b.claim_no = s.claim_no
+    inner join {{ ref('stg_hha_revenue_center') }} as l
+        on b.claim_no = l.claim_no
+    /* Payment is provided at the header level only.  Populating on revenue center 001 to avoid duplication. */
+    left join header_payment as p
+        on b.claim_no = p.claim_id
+        and l.rev_cntr = '0001'
+    left join claim_start_date as s
+        on b.claim_no = s.claim_no

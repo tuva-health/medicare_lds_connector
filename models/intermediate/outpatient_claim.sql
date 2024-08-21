@@ -5,28 +5,35 @@ with outpatient_base_claim as (
     from {{ ref('stg_outpatient_base_claim') }}
     where clm_mdcr_non_pmt_rsn_cd is null
     /** filter out denied claims **/
+
 )
-, header_payment as(
+
+, header_payment as (
+
     select
-        claim_no as claim_id
+          claim_no as claim_id
         , cast(clm_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
         , /** medicare payment **/
           cast(clm_pmt_amt as {{ dbt.type_numeric() }})
-          /** beneficiary payment **/
-        + cast(nch_bene_ptb_coinsrnc_amt as {{ dbt.type_numeric() }}) + cast(nch_bene_ptb_ddctbl_amt as {{ dbt.type_numeric() }}) + cast(nch_bene_blood_ddctbl_lblty_am as {{ dbt.type_numeric() }})
-          /** primary payer payment **/
-        + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
-         as total_cost_amount
+              /** beneficiary payment **/
+              + cast(nch_bene_ptb_coinsrnc_amt as {{ dbt.type_numeric() }})
+              + cast(nch_bene_ptb_ddctbl_amt as {{ dbt.type_numeric() }})
+              + cast(nch_bene_blood_ddctbl_lblty_am as {{ dbt.type_numeric() }})
+              /** primary payer payment **/
+              + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
+          as total_cost_amount
         , cast(clm_tot_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
     from outpatient_base_claim
 )
 
 , claim_start_date as (
 
-  select l.claim_no
-  ,min(coalesce(l.rev_cntr_dt,l.clm_thru_dt)) as claim_start_date
-  from {{ ref('stg_outpatient_revenue_center') }} l
-  group by l.claim_no
+    select
+          claim_no
+        , min(coalesce(rev_cntr_dt,clm_thru_dt)) as claim_start_date
+    from {{ ref('stg_outpatient_revenue_center') }}
+    group by claim_no
+
 )
 
 select
@@ -66,7 +73,9 @@ select
     , cast(l.hcpcs_4th_mdfr_cd as {{ dbt.type_string() }} ) as hcpcs_modifier_4
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
     , cast(b.rndrng_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
+    , cast(NULL as {{ dbt.type_string() }} ) as rendering_tin
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
+    , cast(NULL as {{ dbt.type_string() }} ) as billing_tin
     , cast(coalesce(b.org_npi_num,b.srvc_loc_npi_num) as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
     , coalesce(
@@ -182,14 +191,15 @@ select
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
     , 'medicare_lds' as data_source
-    , 1 as in_network_flag
-    , 'outpatient_claim' as file_name
-    , cast(NULL as date ) as ingest_datetime
+    , cast(1 as int) as in_network_flag
+    , cast(b.file_name as {{ dbt.type_string() }} ) as file_name
+    , cast(b.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
 from outpatient_base_claim as b
-inner join {{ ref('stg_outpatient_revenue_center') }} as l
-    on b.claim_no = l.claim_no
-/* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
-left join header_payment p
-    on b.claim_no = p.claim_id
-    and l.rev_cntr = '0001'
-left join claim_start_date c on b.claim_no = c.claim_no
+    inner join {{ ref('stg_outpatient_revenue_center') }} as l
+        on b.claim_no = l.claim_no
+    /* Payment is provided at the header level only.  Populating on revenue center 001 to avoid duplication. */
+    left join header_payment as p
+        on b.claim_no = p.claim_id
+        and l.rev_cntr = '0001'
+    left join claim_start_date as c
+        on b.claim_no = c.claim_no

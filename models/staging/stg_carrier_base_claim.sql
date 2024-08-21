@@ -56,4 +56,6 @@ select
     , cpo_org_npi_num
     , carr_clm_blg_npi_num
     , aco_id_num
+    , file_name
+    , ingest_datetime
 from {{ source('medicare_lds','carrier_base_claim') }}

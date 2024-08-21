@@ -91,4 +91,6 @@ select
     , clm_next_gnrtn_aco_ind_cd4
     , clm_next_gnrtn_aco_ind_cd5
     , aco_id_num
+    , file_name
+    , ingest_datetime
 from {{ source('medicare_lds','hha_base_claim') }}

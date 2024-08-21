@@ -64,12 +64,6 @@ models:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
 
-  - name: _int_medical_claim
-    description: union of all medical claim tables
-    config:
-      schema: |
-        {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
-
   - name: outpatient_claim
     description: Claim line details of outpatient claims
     config:

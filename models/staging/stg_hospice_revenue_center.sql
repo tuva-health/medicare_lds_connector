@@ -26,4 +26,6 @@ select
     , rev_cntr_prcng_ind_cd
     , thrpy_cap_ind_cd1
     , thrpy_cap_ind_cd2
+    , file_name
+    , ingest_datetime
 from {{ source('medicare_lds','hospice_revenue_center') }}
