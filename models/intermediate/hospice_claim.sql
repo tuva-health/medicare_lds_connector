@@ -2,7 +2,7 @@ with hospice_base_claim as (
 
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
-    from {{ source('medicare_lds','hospice_base_claim') }}
+    from {{ ref('stg_hospice_base_claim') }}
     where clm_mdcr_non_pmt_rsn_cd is null
     /** filter out denied claims **/
 )
@@ -22,7 +22,7 @@ with hospice_base_claim as (
 , claim_start_date as (
   select l.claim_no
   ,min(l.rev_cntr_dt) as claim_start_date
-  from {{ source('medicare_lds','hospice_revenue_center') }} l
+  from {{ ref('stg_hospice_revenue_center') }} l
   group by l.claim_no
 )
 
@@ -180,7 +180,7 @@ select
     , 'hospice' as file_name
     , cast(NULL as date ) as ingest_datetime
 from hospice_base_claim as b
-inner join {{ source('medicare_lds','hospice_revenue_center') }} as l
+inner join {{ ref('stg_hospice_revenue_center') }} as l
     on b.claim_no = l.claim_no
 /* Payment is provided at the header level only.  Populating on revenu center 001 to avoid duplication. */
 left join header_payment p

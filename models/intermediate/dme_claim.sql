@@ -2,7 +2,7 @@ with dme_base_claim as (
 
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
-    from {{ source('medicare_lds','dme_base_claim') }}
+    from {{ ref('stg_dme_base_claim') }}
     where carr_clm_pmt_dnl_cd <> '0'
     /** filter out denied claims **/
 )
@@ -11,7 +11,7 @@ with dme_base_claim as (
 
   select l.claim_no
   ,min(l.line_last_expns_dt) as claim_start_date
-  from {{ source('medicare_lds','dme_claim_line') }} l
+  from {{ ref('stg_dme_claim_line') }} l
   group by l.claim_no
 )
 
@@ -175,6 +175,6 @@ select
     , 'dme_claim' as file_name
     , cast(NULL as date ) as ingest_datetime    
 from dme_base_claim as b
-inner join {{ source('medicare_lds','dme_claim_line') }} as l
+inner join {{ ref('stg_dme_claim_line') }} as l
     on b.claim_no = l.claim_no
 inner join claim_start_date c on b.claim_no = c.claim_no

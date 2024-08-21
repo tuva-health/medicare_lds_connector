@@ -1,6 +1,6 @@
 with demographics as (
 
-    select * from {{ source('medicare_lds','master_beneficiary_summary') }}
+    select * from {{ ref('stg_master_beneficiary_summary') }}
 
 ),
 
