@@ -190,8 +190,8 @@ select
     , {{ try_to_cast_date('b.prcdr_dt23', 'YYYYMMDD') }} as procedure_date_23
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
-    , 'medicare_lds' as data_source
     , cast(1 as int) as in_network_flag
+    , 'medicare_lds' as data_source
     , cast(b.file_name as {{ dbt.type_string() }} ) as file_name
     , cast(b.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
 from add_claim_id as b

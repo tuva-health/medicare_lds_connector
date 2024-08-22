@@ -184,8 +184,8 @@ select
     , date(NULL) as procedure_date_23
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
-    , 'medicare_lds' as data_source
     , cast(1 as int) as in_network_flag
+    , 'medicare_lds' as data_source
     , cast(b.file_name as {{ dbt.type_string() }} ) as file_name
     , cast(b.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
 from hha_base_claim as b
