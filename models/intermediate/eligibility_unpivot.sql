@@ -1,10 +1,10 @@
 with demographics as (
 
-    select * from {{ source('medicare_lds','master_beneficiary_summary') }}
+    select * from {{ ref('stg_master_beneficiary_summary') }}
 
-),
+)
 
-unpivot_dual_status as (
+, unpivot_dual_status as (
 
     select
           desy_sort_key
@@ -13,23 +13,23 @@ unpivot_dual_status as (
         , dual_status as dual_status
     from demographics
     unpivot(
-            dual_status for month in (DUAL_STUS_CD_01
-                                      ,DUAL_STUS_CD_02
-                                      ,DUAL_STUS_CD_03
-                                      ,DUAL_STUS_CD_04
-                                      ,DUAL_STUS_CD_05
-                                      ,DUAL_STUS_CD_06
-                                      ,DUAL_STUS_CD_07
-                                      ,DUAL_STUS_CD_08
-                                      ,DUAL_STUS_CD_09
-                                      ,DUAL_STUS_CD_10
-                                      ,DUAL_STUS_CD_11
-                                      ,DUAL_STUS_CD_12)
+            dual_status for month in (dual_stus_cd_01
+                                      ,dual_stus_cd_02
+                                      ,dual_stus_cd_03
+                                      ,dual_stus_cd_04
+                                      ,dual_stus_cd_05
+                                      ,dual_stus_cd_06
+                                      ,dual_stus_cd_07
+                                      ,dual_stus_cd_08
+                                      ,dual_stus_cd_09
+                                      ,dual_stus_cd_10
+                                      ,dual_stus_cd_11
+                                      ,dual_stus_cd_12)
             )p1
 
-),
+)
 
-unpivot_medicare_status as (
+, unpivot_medicare_status as (
 
     select
           desy_sort_key
@@ -38,78 +38,72 @@ unpivot_medicare_status as (
         , medicare_status
     from demographics
     unpivot(
-            medicare_status for month in (MDCR_STATUS_CODE_01
-                                          ,MDCR_STATUS_CODE_02
-                                          ,MDCR_STATUS_CODE_03
-                                          ,MDCR_STATUS_CODE_04
-                                          ,MDCR_STATUS_CODE_05
-                                          ,MDCR_STATUS_CODE_06
-                                          ,MDCR_STATUS_CODE_07
-                                          ,MDCR_STATUS_CODE_08
-                                          ,MDCR_STATUS_CODE_09
-                                          ,MDCR_STATUS_CODE_10
-                                          ,MDCR_STATUS_CODE_11
-                                          ,MDCR_STATUS_CODE_12)
+            medicare_status for month in (mdcr_status_code_01
+                                          ,mdcr_status_code_02
+                                          ,mdcr_status_code_03
+                                          ,mdcr_status_code_04
+                                          ,mdcr_status_code_05
+                                          ,mdcr_status_code_06
+                                          ,mdcr_status_code_07
+                                          ,mdcr_status_code_08
+                                          ,mdcr_status_code_09
+                                          ,mdcr_status_code_10
+                                          ,mdcr_status_code_11
+                                          ,mdcr_status_code_12)
             )p1
 
 )
 
-,
+, unpivot_hmo_status as (
 
-unpivot_hmo_status as (
     select
           desy_sort_key
-        , case when LENGTH(month) = 14 then substring(month, 14, 1)  -- 'entitlement_buy_in_ind1' -> '1'
-               when LENGTH(month) = 15 then substring(month, 14, 2)  -- 'entitlement_buy_in_ind10' -> '10'
+        , case when length(month) = 14 then substring(month, 14, 1)  -- 'entitlement_buy_in_ind1' -> '1'
+               when length(month) = 15 then substring(month, 14, 2)  -- 'entitlement_buy_in_ind10' -> '10'
                else null end as month
         , reference_year as year
         , hmo_status
     from demographics
     unpivot(
-            hmo_status for month in (HMO_INDICATOR1
-                                          ,HMO_INDICATOR2
-                                          ,HMO_INDICATOR3
-                                          ,HMO_INDICATOR4
-                                          ,HMO_INDICATOR5
-                                          ,HMO_INDICATOR6
-                                          ,HMO_INDICATOR7
-                                          ,HMO_INDICATOR8
-                                          ,HMO_INDICATOR9
-                                          ,HMO_INDICATOR10
-                                          ,HMO_INDICATOR11
-                                          ,HMO_INDICATOR12
-                                          )
+            hmo_status for month in (hmo_indicator1
+                                     ,hmo_indicator2
+                                     ,hmo_indicator3
+                                     ,hmo_indicator4
+                                     ,hmo_indicator5
+                                     ,hmo_indicator6
+                                     ,hmo_indicator7
+                                     ,hmo_indicator8
+                                     ,hmo_indicator9
+                                     ,hmo_indicator10
+                                     ,hmo_indicator11
+                                     ,hmo_indicator12)
             )p1
-
 
 )
 
-,
-
-unpivot_entitlement as (
+, unpivot_entitlement as (
 
     select
           desy_sort_key
-        , case when LENGTH(month) = 23 then substring(month, 23, 1)  -- 'entitlement_buy_in_ind1' -> '1'
-               when LENGTH(month) = 24 then substring(month, 23, 2)  -- 'entitlement_buy_in_ind10' -> '10'
+        , case when length(month) = 23 then substring(month, 23, 1)  -- 'entitlement_buy_in_ind1' -> '1'
+               when length(month) = 24 then substring(month, 23, 2)  -- 'entitlement_buy_in_ind10' -> '10'
                else null end as month
         , reference_year as year
         , entitlement
     from demographics
     unpivot(
             entitlement for month in (entitlement_buy_in_ind1
-                                          ,entitlement_buy_in_ind2
-                                          ,entitlement_buy_in_ind3
-                                          ,entitlement_buy_in_ind4
-                                          ,entitlement_buy_in_ind5
-                                          ,entitlement_buy_in_ind6
-                                          ,entitlement_buy_in_ind7
-                                          ,entitlement_buy_in_ind8
-                                          ,entitlement_buy_in_ind9
-                                          ,entitlement_buy_in_ind10
-                                          ,entitlement_buy_in_ind11
-                                          ,entitlement_buy_in_ind12
-                                          )
+                                      ,entitlement_buy_in_ind2
+                                      ,entitlement_buy_in_ind3
+                                      ,entitlement_buy_in_ind4
+                                      ,entitlement_buy_in_ind5
+                                      ,entitlement_buy_in_ind6
+                                      ,entitlement_buy_in_ind7
+                                      ,entitlement_buy_in_ind8
+                                      ,entitlement_buy_in_ind9
+                                      ,entitlement_buy_in_ind10
+                                      ,entitlement_buy_in_ind11
+                                      ,entitlement_buy_in_ind12)
             )p1
 
 )
@@ -136,6 +130,8 @@ select
       ) as year_month
     , unpivot_hmo_status.hmo_status
     , unpivot_entitlement.entitlement
+    , demographics.file_name
+    , demographics.ingest_datetime
 from demographics
      inner join unpivot_dual_status
          on demographics.desy_sort_key = unpivot_dual_status.desy_sort_key

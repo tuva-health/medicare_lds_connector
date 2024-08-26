@@ -6,20 +6,34 @@
 
 with eligibility_unpivot as (
 
-    select *
+    select
+          desy_sort_key
+        , age
+        , sex_code
+        , race_code
+        , state_code
+        , date_of_death
+        , orig_reason_for_entitlement
+        , dual_status
+        , medicare_status
+        , year_month
+        , hmo_status
+        , entitlement
+        , file_name
+        , ingest_datetime
          , {{ to_date('year_month', 'YYYYMM') }} as enrollment_date
          , cast(year as integer) - cast(age as integer) as birth_year
     from {{ ref('eligibility_unpivot') }}
 
-),
+)
 
-medicare_state_fips as (
+, medicare_state_fips as (
 
     select * from {{ ref('reference_data__ssa_fips_state') }}
 
-),
+)
 
-add_row_num as (
+, add_row_num as (
 
     select
           desy_sort_key
@@ -36,13 +50,13 @@ add_row_num as (
           end as disenrolled_flag
     from eligibility_unpivot
 
-),
+)
 
 /*
     remove member months where the patient was not enrolled medicare
     and did not have dual medicaid status
 */
-remove_disenrolled_months as (
+, remove_disenrolled_months as (
 
      select
           desy_sort_key
@@ -52,9 +66,9 @@ remove_disenrolled_months as (
     from add_row_num
     where disenrolled_flag = 0
 
-),
+)
 
-add_lag_enrollment as (
+, add_lag_enrollment as (
 
     select
           desy_sort_key
@@ -66,9 +80,9 @@ add_lag_enrollment as (
           ) as lag_enrollment
     from remove_disenrolled_months
 
-),
+)
 
-calculate_lag_diff as (
+, calculate_lag_diff as (
 
     select
           desy_sort_key
@@ -78,9 +92,9 @@ calculate_lag_diff as (
         , {{ datediff('lag_enrollment', 'enrollment_date', 'month') }} as lag_diff
     from add_lag_enrollment
 
-),
+)
 
-calculate_gaps as (
+, calculate_gaps as (
 
      select
           desy_sort_key
@@ -94,9 +108,9 @@ calculate_gaps as (
           end as gap_flag
     from calculate_lag_diff
 
-),
+)
 
-calculate_groups as (
+, calculate_groups as (
 
      select
           desy_sort_key
@@ -110,9 +124,9 @@ calculate_groups as (
           ) as row_group
     from calculate_gaps
 
-),
+)
 
-enrollment_span as (
+, enrollment_span as (
 
     select
           desy_sort_key
@@ -123,9 +137,9 @@ enrollment_span as (
     from calculate_groups
     group by desy_sort_key, row_group
 
-),
+)
 
-joined as (
+, joined as (
 
     select
           cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as patient_id
@@ -169,17 +183,44 @@ joined as (
         , cast(NULL as {{ dbt.type_string() }} ) as zip_code
         , cast(NULL as {{ dbt.type_string() }} ) as phone
         , 'medicare_lds' as data_source
-        , 'master_beneficiary_summary' as file_name
-        , cast(NULL as date ) as ingest_datetime
-        
-
+        , cast(eligibility_unpivot.file_name as {{ dbt.type_string() }} ) as file_name
+        , cast(eligibility_unpivot.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
     from enrollment_span
-         left join eligibility_unpivot
+        left join eligibility_unpivot
             on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key
             and enrollment_span.enrollment_end_date_max = eligibility_unpivot.enrollment_date
-         left join medicare_state_fips
+        left join medicare_state_fips
             on eligibility_unpivot.state_code = medicare_state_fips.ssa_fips_state_code
 
 )
 
-select * from joined
+select
+      patient_id
+    , member_id
+    , subscriber_id
+    , gender
+    , race
+    , birth_date
+    , death_date
+    , death_flag
+    , enrollment_start_date
+    , enrollment_end_date
+    , payer
+    , payer_type
+    , plan
+    , original_reason_entitlement_code
+    , dual_status_code
+    , medicare_status_code
+    , first_name
+    , last_name
+    , social_security_number
+    , subscriber_relation
+    , address
+    , city
+    , state
+    , zip_code
+    , phone
+    , data_source
+    , file_name
+    , ingest_datetime
+from joined

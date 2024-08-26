@@ -2,7 +2,7 @@ with carrier_base_claim as (
 
     select *
          , left(clm_thru_dt,4) as clm_thru_dt_year
-    from {{ source('medicare_lds','carrier_base_claim') }}
+    from {{ ref('stg_carrier_base_claim') }}
     where carr_clm_pmt_dnl_cd <> '0'
     /** filter out denied claims **/
 
@@ -10,10 +10,12 @@ with carrier_base_claim as (
 
 , claim_start_date as (
 
-  select l.claim_no
-  ,min(l.line_last_expns_dt) as claim_start_date
-  from {{ source('medicare_lds','carrier_claim_line') }} l
-  group by l.claim_no
+    select
+          claim_no
+        , min(line_last_expns_dt) as claim_start_date
+    from {{ ref('stg_carrier_claim_line') }}
+    group by claim_no
+
 )
 
 select
@@ -50,7 +52,9 @@ select
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_4
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
     , cast(l.prf_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
+    , cast(NULL as {{ dbt.type_string() }} ) as rendering_tin
     , cast(b.carr_clm_blg_npi_num as {{ dbt.type_string() }} ) as billing_npi
+    , cast(NULL as {{ dbt.type_string() }} ) as billing_tin
     , cast(null as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
     , cast(l.line_nch_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
@@ -171,12 +175,12 @@ select
     , date(NULL) as procedure_date_23
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
-    , 'medicare_lds' as data_source
-    , 1 as in_network_flag
-    , 'carrier_claim' as file_name
-    , cast(NULL as date ) as ingest_datetime
-    
+    , cast(1 as int) as in_network_flag
+    , cast('medicare_lds' as {{ dbt.type_string() }} ) as data_source
+    , cast(b.file_name as {{ dbt.type_string() }} ) as file_name
+    , cast(b.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
 from carrier_base_claim as b
-inner join {{ source('medicare_lds','carrier_claim_line') }} as l
-    on b.claim_no = l.claim_no
-inner join claim_start_date c on b.claim_no = c.claim_no
+    inner join {{ ref('stg_carrier_claim_line') }} as l
+        on b.claim_no = l.claim_no
+    inner join claim_start_date as c
+        on b.claim_no = c.claim_no

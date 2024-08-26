@@ -1,28 +1,34 @@
 with inpatient_base_claim as (
-select 
-  *
-, left(clm_thru_dt,4) as clm_thru_dt_year
-from {{ source('medicare_lds','inpatient_base_claim') }}
-where clm_mdcr_non_pmt_rsn_cd is null  /** filter out denied claims **/
-),
+
+    select *
+         , left(clm_thru_dt,4) as clm_thru_dt_year
+    from {{ ref('stg_inpatient_base_claim') }}
+    where clm_mdcr_non_pmt_rsn_cd is null  /** filter out denied claims **/
+
+)
 
 /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
-add_claim_id as (
-select
-  *
-, cast(claim_no as {{ dbt.type_string() }} ) || cast(clm_thru_dt_year as {{ dbt.type_string() }} ) || cast(nch_clm_type_cd as {{ dbt.type_string() }} ) as claim_id
-from inpatient_base_claim
+, add_claim_id as (
 
-),
+    select *
+         , cast(claim_no as {{ dbt.type_string() }} )
+               || cast(clm_thru_dt_year as {{ dbt.type_string() }} )
+               || cast(nch_clm_type_cd as {{ dbt.type_string() }}
+           ) as claim_id
+    from inpatient_base_claim
 
-header_payment as (
-select
-  claim_id
-, sum(cast(clm_pmt_amt as {{ dbt.type_numeric() }})) as paid_amount
-, sum(cast(clm_tot_chrg_amt as {{ dbt.type_numeric() }})) as charge_amount
-from add_claim_id
-group by 1
-) 
+)
+
+, header_payment as (
+
+    select
+          claim_id
+        , sum(cast(clm_pmt_amt as {{ dbt.type_numeric() }})) as paid_amount
+        , sum(cast(clm_tot_chrg_amt as {{ dbt.type_numeric() }})) as charge_amount
+    from add_claim_id
+    group by claim_id
+
+)
 
 select
       b.claim_id
@@ -57,7 +63,9 @@ select
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_4
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
     , cast(b.rndrng_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
+    , cast(NULL as {{ dbt.type_string() }} ) as rendering_tin
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
+    , cast(NULL as {{ dbt.type_string() }} ) as billing_tin
     , cast(b.org_npi_num as {{ dbt.type_string() }} ) as facility_npi
     , date(NULL) as paid_date
     , coalesce(p.paid_amount,cast(0 as {{ dbt.type_numeric() }})) as paid_amount
@@ -169,14 +177,14 @@ select
     , {{ try_to_cast_date('b.prcdr_dt23', 'YYYYMMDD') }} as procedure_date_23
     , {{ try_to_cast_date('b.prcdr_dt24', 'YYYYMMDD') }} as procedure_date_24
     , {{ try_to_cast_date('b.prcdr_dt25', 'YYYYMMDD') }} as procedure_date_25
+    , cast(1 as int) as in_network_flag
     , 'medicare_lds' as data_source
-    , 1 as in_network_flag
-    , 'inpatient_claim' as file_name
-    , cast(NULL as date ) as ingest_datetime
+    , cast(b.file_name as {{ dbt.type_string() }} ) as file_name
+    , cast(b.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
 from add_claim_id as b
-inner join {{ source('medicare_lds','inpatient_revenue_center') }} as l
-    on b.claim_no = l.claim_no
-/* Payment is provided at the header level only.  Populating on revenue center 0001 to avoid duplication. */
-left join header_payment p
-    on b.claim_id = p.claim_id
-    and l.rev_cntr = '0001'
+    inner join {{ ref('stg_inpatient_revenue_center') }} as l
+        on b.claim_no = l.claim_no
+    /* Payment is provided at the header level only.  Populating on revenue center 0001 to avoid duplication. */
+    left join header_payment as p
+        on b.claim_id = p.claim_id
+        and l.rev_cntr = '0001'
