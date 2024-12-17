@@ -142,7 +142,7 @@ with eligibility_unpivot as (
 , joined as (
 
     select
-          cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as patient_id
+          cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as person_id
         , cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as member_id
         , cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as subscriber_id
         , case eligibility_unpivot.sex_code
@@ -195,7 +195,7 @@ with eligibility_unpivot as (
 )
 
 select
-      patient_id
+      person_id
     , member_id
     , subscriber_id
     , gender
