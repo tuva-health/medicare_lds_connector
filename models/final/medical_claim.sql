@@ -28,7 +28,7 @@ with unioned as (
 , member_months as (
 
     select distinct
-          a.patient_id
+          a.person_id
         , year_nbr
         , month_nbr
         , a.payer
@@ -46,7 +46,7 @@ select
       c.claim_id
     , c.claim_line_number
     , c.claim_type
-    , c.patient_id
+    , c.person_id
     , c.member_id
     , c.payer
     , c.plan
@@ -192,6 +192,6 @@ select
     , c.ingest_datetime
 from unioned as c
     inner join member_months as mm
-        on c.patient_id = mm.patient_id
+        on c.person_id = mm.person_id
         and extract(year from c.claim_start_date) = mm.year_nbr
         and extract(month from c.claim_start_date) = mm.month_nbr
