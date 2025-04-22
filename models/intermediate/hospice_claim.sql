@@ -1,7 +1,7 @@
 with hospice_base_claim as (
 
     select *
-         , left(clm_thru_dt,4) as clm_thru_dt_year
+         , left(cast(clm_thru_dt as {{ dbt.type_string() }} ) ,4) as clm_thru_dt_year
     from {{ ref('stg_hospice_base_claim') }}
     where clm_mdcr_non_pmt_rsn_cd is null
     /** filter out denied claims **/
@@ -12,13 +12,13 @@ with hospice_base_claim as (
 
     select
           claim_no as claim_id
-        , cast(clm_pmt_amt as {{ dbt.type_numeric() }}) as paid_amount
+        , clm_pmt_amt as paid_amount
         , /** medicare payment **/
-          cast(clm_pmt_amt as {{ dbt.type_numeric() }})
+          clm_pmt_amt
               /** primary payer payment **/
-              + cast(nch_prmry_pyr_clm_pd_amt as {{ dbt.type_numeric() }})
+              + nch_prmry_pyr_clm_pd_amt
           as total_cost_amount
-        , cast(clm_tot_chrg_amt as {{ dbt.type_numeric() }}) as charge_amount
+        , clm_tot_chrg_amt as charge_amount
     from hospice_base_claim
 
 )
@@ -35,45 +35,45 @@ with hospice_base_claim as (
 
 select
       /* Claim ID is not unique across claim types.  Concatenating original claim ID, claim year, and claim type. */
-      cast(b.claim_no as {{ dbt.type_string() }} )
-        || cast(b.clm_thru_dt_year as {{ dbt.type_string() }} )
-        || cast(b.nch_clm_type_cd as {{ dbt.type_string() }} )
+      b.claim_no
+        || b.clm_thru_dt_year
+        || b.nch_clm_type_cd
       as claim_id
-    , cast(l.clm_line_num as integer) as claim_line_number
+    , l.clm_line_num as claim_line_number
     , 'institutional' as claim_type
-    , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as person_id
-    , cast(b.desy_sort_key as {{ dbt.type_string() }} ) as member_id
+    , b.desy_sort_key as person_id
+    , b.desy_sort_key as member_id
     , cast('medicare' as {{ dbt.type_string() }} ) as payer
     , cast('medicare' as {{ dbt.type_string() }} ) as plan
-    , {{ try_to_cast_date('coalesce(c.claim_start_date,b.clm_hospc_start_dt_id,b.clm_thru_dt)', 'YYYYMMDD') }} as claim_start_date
-    , {{ try_to_cast_date('b.clm_thru_dt', 'YYYYMMDD') }} as claim_end_date
-    , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_start_date
-    , {{ try_to_cast_date('l.rev_cntr_dt', 'YYYYMMDD') }} as claim_line_end_date
-    , {{ try_to_cast_date('b.clm_hospc_start_dt_id', 'YYYYMMDD') }} as admission_date
-    , {{ try_to_cast_date('b.nch_bene_dschrg_dt', 'YYYYMMDD') }} as discharge_date
+    , coalesce(c.claim_start_date,b.clm_hospc_start_dt_id,b.clm_thru_dt) as claim_start_date
+    , b.clm_thru_dt as claim_end_date
+    , l.rev_cntr_dt as claim_line_start_date
+    , l.rev_cntr_dt as claim_line_end_date
+    , b.clm_hospc_start_dt_id as admission_date
+    , b.nch_bene_dschrg_dt as discharge_date
     , cast(NULL as {{ dbt.type_string() }} ) as admit_source_code
     , cast(NULL as {{ dbt.type_string() }} ) as admit_type_code
     , cast(NULL as {{ dbt.type_string() }} ) as discharge_disposition_code
     , cast(NULL as {{ dbt.type_string() }} ) as place_of_service_code
-    , cast(b.clm_fac_type_cd as {{ dbt.type_string() }} )
-        || cast(b.clm_srvc_clsfctn_type_cd as {{ dbt.type_string() }} )
-        || cast(b.clm_freq_cd as {{ dbt.type_string() }} )
+    , b.clm_fac_type_cd
+        || b.clm_srvc_clsfctn_type_cd
+        || b.clm_freq_cd
       as bill_type_code
     , cast(NULL as {{ dbt.type_string() }} ) as ms_drg_code
     , cast(NULL as {{ dbt.type_string() }} ) as apr_drg_code
-    , cast(l.rev_cntr as {{ dbt.type_string() }} ) as revenue_center_code
-    , cast(regexp_substr(l.rev_cntr_unit_cnt, '.') as integer) as service_unit_quantity
-    , cast(l.hcpcs_cd as {{ dbt.type_string() }} ) as hcpcs_code
-    , cast(l.hcpcs_1st_mdfr_cd as {{ dbt.type_string() }} ) as hcpcs_modifier_1
-    , cast(l.hcpcs_2nd_mdfr_cd as {{ dbt.type_string() }} ) as hcpcs_modifier_2
-    , cast(l.hcpcs_3rd_mdfr_cd as {{ dbt.type_string() }} ) as hcpcs_modifier_3
+    , l.rev_cntr as revenue_center_code
+    , l.rev_cntr_unit_cnt as service_unit_quantity
+    , l.hcpcs_cd as hcpcs_code
+    , l.hcpcs_1st_mdfr_cd as hcpcs_modifier_1
+    , l.hcpcs_2nd_mdfr_cd as hcpcs_modifier_2
+    , l.hcpcs_3rd_mdfr_cd as hcpcs_modifier_3
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_4
     , cast(NULL as {{ dbt.type_string() }} ) as hcpcs_modifier_5
-    , cast(l.rev_cntr_rndrng_physn_npi as {{ dbt.type_string() }} ) as rendering_npi
+    , l.rev_cntr_rndrng_physn_npi as rendering_npi
     , cast(NULL as {{ dbt.type_string() }} ) as rendering_tin
-    , cast(b.org_npi_num as {{ dbt.type_string() }} ) as billing_npi
+    , b.org_npi_num as billing_npi
     , cast(NULL as {{ dbt.type_string() }} ) as billing_tin
-    , cast(coalesce(b.org_npi_num,b.srvc_loc_npi_num) as {{ dbt.type_string() }} ) as facility_npi
+    , coalesce(b.org_npi_num,b.srvc_loc_npi_num) as facility_npi
     , date(NULL) as paid_date
     , p.paid_amount as paid_amount
     , cast(NULL as {{ dbt.type_numeric() }}) as allowed_amount
@@ -82,32 +82,32 @@ select
     , cast(null as {{ dbt.type_numeric() }}) as copayment_amount
     , cast(null as {{ dbt.type_numeric() }}) as deductible_amount
     , p.total_cost_amount as total_cost_amount
-    , 'icd-10-cm' as diagnosis_code_type
-    , cast(b.prncpal_dgns_cd as {{ dbt.type_string() }} ) as diagnosis_code_1
-    , cast(b.icd_dgns_cd2 as {{ dbt.type_string() }} ) as diagnosis_code_2
-    , cast(b.icd_dgns_cd3 as {{ dbt.type_string() }} ) as diagnosis_code_3
-    , cast(b.icd_dgns_cd4 as {{ dbt.type_string() }} ) as diagnosis_code_4
-    , cast(b.icd_dgns_cd5 as {{ dbt.type_string() }} ) as diagnosis_code_5
-    , cast(b.icd_dgns_cd6 as {{ dbt.type_string() }} ) as diagnosis_code_6
-    , cast(b.icd_dgns_cd7 as {{ dbt.type_string() }} ) as diagnosis_code_7
-    , cast(b.icd_dgns_cd8 as {{ dbt.type_string() }} ) as diagnosis_code_8
-    , cast(b.icd_dgns_cd9 as {{ dbt.type_string() }} ) as diagnosis_code_9
-    , cast(b.icd_dgns_cd10 as {{ dbt.type_string() }} ) as diagnosis_code_10
-    , cast(b.icd_dgns_cd11 as {{ dbt.type_string() }} ) as diagnosis_code_11
-    , cast(b.icd_dgns_cd12 as {{ dbt.type_string() }} ) as diagnosis_code_12
-    , cast(b.icd_dgns_cd13 as {{ dbt.type_string() }} ) as diagnosis_code_13
-    , cast(b.icd_dgns_cd14 as {{ dbt.type_string() }} ) as diagnosis_code_14
-    , cast(b.icd_dgns_cd15 as {{ dbt.type_string() }} ) as diagnosis_code_15
-    , cast(b.icd_dgns_cd16 as {{ dbt.type_string() }} ) as diagnosis_code_16
-    , cast(b.icd_dgns_cd17 as {{ dbt.type_string() }} ) as diagnosis_code_17
-    , cast(b.icd_dgns_cd18 as {{ dbt.type_string() }} ) as diagnosis_code_18
-    , cast(b.icd_dgns_cd19 as {{ dbt.type_string() }} ) as diagnosis_code_19
-    , cast(b.icd_dgns_cd20 as {{ dbt.type_string() }} ) as diagnosis_code_20
-    , cast(b.icd_dgns_cd21 as {{ dbt.type_string() }} ) as diagnosis_code_21
-    , cast(b.icd_dgns_cd22 as {{ dbt.type_string() }} ) as diagnosis_code_22
-    , cast(b.icd_dgns_cd23 as {{ dbt.type_string() }} ) as diagnosis_code_23
-    , cast(b.icd_dgns_cd24 as {{ dbt.type_string() }} ) as diagnosis_code_24
-    , cast(b.icd_dgns_cd25 as {{ dbt.type_string() }} ) as diagnosis_code_25
+    , cast('icd-10-cm' as {{ dbt.type_string() }} ) as diagnosis_code_type
+    , b.prncpal_dgns_cd as diagnosis_code_1
+    , b.icd_dgns_cd2 as diagnosis_code_2
+    , b.icd_dgns_cd3 as diagnosis_code_3
+    , b.icd_dgns_cd4 as diagnosis_code_4
+    , b.icd_dgns_cd5 as diagnosis_code_5
+    , b.icd_dgns_cd6 as diagnosis_code_6
+    , b.icd_dgns_cd7 as diagnosis_code_7
+    , b.icd_dgns_cd8 as diagnosis_code_8
+    , b.icd_dgns_cd9 as diagnosis_code_9
+    , b.icd_dgns_cd10 as diagnosis_code_10
+    , b.icd_dgns_cd11 as diagnosis_code_11
+    , b.icd_dgns_cd12 as diagnosis_code_12
+    , b.icd_dgns_cd13 as diagnosis_code_13
+    , b.icd_dgns_cd14 as diagnosis_code_14
+    , b.icd_dgns_cd15 as diagnosis_code_15
+    , b.icd_dgns_cd16 as diagnosis_code_16
+    , b.icd_dgns_cd17 as diagnosis_code_17
+    , b.icd_dgns_cd18 as diagnosis_code_18
+    , b.icd_dgns_cd19 as diagnosis_code_19
+    , b.icd_dgns_cd20 as diagnosis_code_20
+    , b.icd_dgns_cd21 as diagnosis_code_21
+    , b.icd_dgns_cd22 as diagnosis_code_22
+    , b.icd_dgns_cd23 as diagnosis_code_23
+    , b.icd_dgns_cd24 as diagnosis_code_24
+    , b.icd_dgns_cd25 as diagnosis_code_25
     , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_1
     , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_2
     , cast(NULL as {{ dbt.type_string() }} ) as diagnosis_poa_3
@@ -185,9 +185,9 @@ select
     , date(NULL) as procedure_date_24
     , date(NULL) as procedure_date_25
     , cast(1 as int) as in_network_flag
-    , 'medicare_lds' as data_source
-    , cast(b.file_name as {{ dbt.type_string() }} ) as file_name
-    , cast(b.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
+    , cast('medicare_lds' as {{ dbt.type_string() }} ) as data_source
+    , b.file_name
+    , b.ingest_datetime
 from hospice_base_claim as b
     inner join {{ ref('stg_hospice_revenue_center') }} as l
         on b.claim_no = l.claim_no

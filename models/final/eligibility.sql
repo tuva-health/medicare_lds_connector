@@ -21,8 +21,8 @@ with eligibility_unpivot as (
         , entitlement
         , file_name
         , ingest_datetime
-         , {{ to_date('year_month', 'YYYYMM') }} as enrollment_date
-         , cast(year as integer) - cast(age as integer) as birth_year
+        , {{ to_date('year_month', 'YYYYMM') }} as enrollment_date
+        , cast(year as integer) - cast(age as integer) as birth_year
     from {{ ref('eligibility_unpivot') }}
 
 )
@@ -142,9 +142,9 @@ with eligibility_unpivot as (
 , joined as (
 
     select
-          cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as person_id
-        , cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as member_id
-        , cast(enrollment_span.desy_sort_key as {{ dbt.type_string() }} ) as subscriber_id
+          enrollment_span.desy_sort_key as person_id
+        , enrollment_span.desy_sort_key as member_id
+        , enrollment_span.desy_sort_key as subscriber_id
         , case eligibility_unpivot.sex_code
                when '0' then 'unknown'
                when '1' then 'male'
@@ -170,9 +170,9 @@ with eligibility_unpivot as (
         , 'medicare' as payer
         , 'medicare' as payer_type
         , 'medicare' as plan
-        , cast(eligibility_unpivot.orig_reason_for_entitlement as {{ dbt.type_string() }} ) as original_reason_entitlement_code
-        , cast(eligibility_unpivot.dual_status as {{ dbt.type_string() }} ) as dual_status_code
-        , cast(eligibility_unpivot.medicare_status as {{ dbt.type_string() }} ) as medicare_status_code
+        , eligibility_unpivot.orig_reason_for_entitlement as original_reason_entitlement_code
+        , eligibility_unpivot.dual_status as dual_status_code
+        , eligibility_unpivot.medicare_status as medicare_status_code
         , cast(NULL as {{ dbt.type_string() }} ) as first_name
         , cast(NULL as {{ dbt.type_string() }} ) as last_name
         , cast(NULL as {{ dbt.type_string() }} ) as social_security_number
@@ -183,8 +183,8 @@ with eligibility_unpivot as (
         , cast(NULL as {{ dbt.type_string() }} ) as zip_code
         , cast(NULL as {{ dbt.type_string() }} ) as phone
         , 'medicare_lds' as data_source
-        , cast(eligibility_unpivot.file_name as {{ dbt.type_string() }} ) as file_name
-        , cast(eligibility_unpivot.ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime
+        , eligibility_unpivot.file_name
+        , eligibility_unpivot.ingest_datetime
     from enrollment_span
         left join eligibility_unpivot
             on enrollment_span.desy_sort_key = eligibility_unpivot.desy_sort_key

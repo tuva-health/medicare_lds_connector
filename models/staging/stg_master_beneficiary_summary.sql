@@ -1,83 +1,83 @@
 select
-      desy_sort_key
-    , reference_year
-    , sample_group
-    , state_code
-    , county_code
-    , state_cnty_fips_cd_01
-    , state_cnty_fips_cd_02
-    , state_cnty_fips_cd_03
-    , state_cnty_fips_cd_04
-    , state_cnty_fips_cd_05
-    , state_cnty_fips_cd_06
-    , state_cnty_fips_cd_07
-    , state_cnty_fips_cd_08
-    , state_cnty_fips_cd_09
-    , state_cnty_fips_cd_10
-    , state_cnty_fips_cd_11
-    , state_cnty_fips_cd_12
-    , sex_code
-    , race_code
-    , age
-    , orig_reason_for_entitlement
-    , curr_reason_for_entitlement
-    , esrd_indicator
-    , mdcr_status_code_01
-    , mdcr_status_code_02
-    , mdcr_status_code_03
-    , mdcr_status_code_04
-    , mdcr_status_code_05
-    , mdcr_status_code_06
-    , mdcr_status_code_07
-    , mdcr_status_code_08
-    , mdcr_status_code_09
-    , mdcr_status_code_10
-    , mdcr_status_code_11
-    , mdcr_status_code_12
-    , part_a_termination_code
-    , part_b_termination_code
-    , entitlement_buy_in_ind1
-    , entitlement_buy_in_ind2
-    , entitlement_buy_in_ind3
-    , entitlement_buy_in_ind4
-    , entitlement_buy_in_ind5
-    , entitlement_buy_in_ind6
-    , entitlement_buy_in_ind7
-    , entitlement_buy_in_ind8
-    , entitlement_buy_in_ind9
-    , entitlement_buy_in_ind10
-    , entitlement_buy_in_ind11
-    , entitlement_buy_in_ind12
-    , hmo_indicator1
-    , hmo_indicator2
-    , hmo_indicator3
-    , hmo_indicator4
-    , hmo_indicator5
-    , hmo_indicator6
-    , hmo_indicator7
-    , hmo_indicator8
-    , hmo_indicator9
-    , hmo_indicator10
-    , hmo_indicator11
-    , hmo_indicator12
-    , hi_coverage
-    , smi_coverage
-    , hmo_coverage
-    , state_buy_in_coverage
-    , valid_date_of_death_switch
-    , date_of_death
-    , dual_stus_cd_01
-    , dual_stus_cd_02
-    , dual_stus_cd_03
-    , dual_stus_cd_04
-    , dual_stus_cd_05
-    , dual_stus_cd_06
-    , dual_stus_cd_07
-    , dual_stus_cd_08
-    , dual_stus_cd_09
-    , dual_stus_cd_10
-    , dual_stus_cd_11
-    , dual_stus_cd_12
-    , file_name
-    , ingest_datetime
+      cast(desy_sort_key as {{ dbt.type_string() }} ) as desy_sort_key 
+    , cast(reference_year as {{ dbt.type_string() }} ) as reference_year 
+    , cast(sample_group as {{ dbt.type_string() }} ) as sample_group 
+    , cast(state_code as {{ dbt.type_string() }} ) as state_code 
+    , cast(county_code as {{ dbt.type_string() }} ) as county_code 
+    , cast(state_cnty_fips_cd_01 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_01 
+    , cast(state_cnty_fips_cd_02 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_02 
+    , cast(state_cnty_fips_cd_03 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_03 
+    , cast(state_cnty_fips_cd_04 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_04 
+    , cast(state_cnty_fips_cd_05 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_05 
+    , cast(state_cnty_fips_cd_06 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_06 
+    , cast(state_cnty_fips_cd_07 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_07 
+    , cast(state_cnty_fips_cd_08 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_08 
+    , cast(state_cnty_fips_cd_09 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_09 
+    , cast(state_cnty_fips_cd_10 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_10 
+    , cast(state_cnty_fips_cd_11 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_11 
+    , cast(state_cnty_fips_cd_12 as {{ dbt.type_string() }} ) as state_cnty_fips_cd_12 
+    , cast(sex_code as {{ dbt.type_string() }} ) as sex_code 
+    , cast(race_code as {{ dbt.type_string() }} ) as race_code 
+    , cast(age as {{ dbt.type_string() }} ) as age 
+    , cast(orig_reason_for_entitlement as {{ dbt.type_string() }} ) as orig_reason_for_entitlement 
+    , cast(curr_reason_for_entitlement as {{ dbt.type_string() }} ) as curr_reason_for_entitlement 
+    , cast(esrd_indicator as {{ dbt.type_string() }} ) as esrd_indicator 
+    , cast(mdcr_status_code_01 as {{ dbt.type_string() }} ) as mdcr_status_code_01 
+    , cast(mdcr_status_code_02 as {{ dbt.type_string() }} ) as mdcr_status_code_02 
+    , cast(mdcr_status_code_03 as {{ dbt.type_string() }} ) as mdcr_status_code_03 
+    , cast(mdcr_status_code_04 as {{ dbt.type_string() }} ) as mdcr_status_code_04 
+    , cast(mdcr_status_code_05 as {{ dbt.type_string() }} ) as mdcr_status_code_05 
+    , cast(mdcr_status_code_06 as {{ dbt.type_string() }} ) as mdcr_status_code_06 
+    , cast(mdcr_status_code_07 as {{ dbt.type_string() }} ) as mdcr_status_code_07 
+    , cast(mdcr_status_code_08 as {{ dbt.type_string() }} ) as mdcr_status_code_08 
+    , cast(mdcr_status_code_09 as {{ dbt.type_string() }} ) as mdcr_status_code_09 
+    , cast(mdcr_status_code_10 as {{ dbt.type_string() }} ) as mdcr_status_code_10 
+    , cast(mdcr_status_code_11 as {{ dbt.type_string() }} ) as mdcr_status_code_11 
+    , cast(mdcr_status_code_12 as {{ dbt.type_string() }} ) as mdcr_status_code_12 
+    , cast(part_a_termination_code as {{ dbt.type_string() }} ) as part_a_termination_code 
+    , cast(part_b_termination_code as {{ dbt.type_string() }} ) as part_b_termination_code 
+    , cast(entitlement_buy_in_ind1 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind1 
+    , cast(entitlement_buy_in_ind2 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind2 
+    , cast(entitlement_buy_in_ind3 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind3 
+    , cast(entitlement_buy_in_ind4 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind4 
+    , cast(entitlement_buy_in_ind5 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind5 
+    , cast(entitlement_buy_in_ind6 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind6 
+    , cast(entitlement_buy_in_ind7 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind7 
+    , cast(entitlement_buy_in_ind8 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind8 
+    , cast(entitlement_buy_in_ind9 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind9 
+    , cast(entitlement_buy_in_ind10 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind10 
+    , cast(entitlement_buy_in_ind11 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind11 
+    , cast(entitlement_buy_in_ind12 as {{ dbt.type_string() }} ) as entitlement_buy_in_ind12 
+    , cast(hmo_indicator1 as {{ dbt.type_string() }} ) as hmo_indicator1 
+    , cast(hmo_indicator2 as {{ dbt.type_string() }} ) as hmo_indicator2 
+    , cast(hmo_indicator3 as {{ dbt.type_string() }} ) as hmo_indicator3 
+    , cast(hmo_indicator4 as {{ dbt.type_string() }} ) as hmo_indicator4 
+    , cast(hmo_indicator5 as {{ dbt.type_string() }} ) as hmo_indicator5 
+    , cast(hmo_indicator6 as {{ dbt.type_string() }} ) as hmo_indicator6 
+    , cast(hmo_indicator7 as {{ dbt.type_string() }} ) as hmo_indicator7 
+    , cast(hmo_indicator8 as {{ dbt.type_string() }} ) as hmo_indicator8 
+    , cast(hmo_indicator9 as {{ dbt.type_string() }} ) as hmo_indicator9 
+    , cast(hmo_indicator10 as {{ dbt.type_string() }} ) as hmo_indicator10 
+    , cast(hmo_indicator11 as {{ dbt.type_string() }} ) as hmo_indicator11 
+    , cast(hmo_indicator12 as {{ dbt.type_string() }} ) as hmo_indicator12 
+    , cast(hi_coverage as {{ dbt.type_string() }} ) as hi_coverage 
+    , cast(smi_coverage as {{ dbt.type_string() }} ) as smi_coverage 
+    , cast(hmo_coverage as {{ dbt.type_string() }} ) as hmo_coverage 
+    , cast(state_buy_in_coverage as {{ dbt.type_string() }} ) as state_buy_in_coverage 
+    , cast(valid_date_of_death_switch as {{ dbt.type_string() }} ) as valid_date_of_death_switch
+    , {{ try_to_cast_date('date_of_death', 'YYYYMMDD') }} as date_of_death 
+    , cast(dual_stus_cd_01 as {{ dbt.type_string() }} ) as dual_stus_cd_01 
+    , cast(dual_stus_cd_02 as {{ dbt.type_string() }} ) as dual_stus_cd_02 
+    , cast(dual_stus_cd_03 as {{ dbt.type_string() }} ) as dual_stus_cd_03 
+    , cast(dual_stus_cd_04 as {{ dbt.type_string() }} ) as dual_stus_cd_04 
+    , cast(dual_stus_cd_05 as {{ dbt.type_string() }} ) as dual_stus_cd_05 
+    , cast(dual_stus_cd_06 as {{ dbt.type_string() }} ) as dual_stus_cd_06 
+    , cast(dual_stus_cd_07 as {{ dbt.type_string() }} ) as dual_stus_cd_07 
+    , cast(dual_stus_cd_08 as {{ dbt.type_string() }} ) as dual_stus_cd_08 
+    , cast(dual_stus_cd_09 as {{ dbt.type_string() }} ) as dual_stus_cd_09 
+    , cast(dual_stus_cd_10 as {{ dbt.type_string() }} ) as dual_stus_cd_10 
+    , cast(dual_stus_cd_11 as {{ dbt.type_string() }} ) as dual_stus_cd_11 
+    , cast(dual_stus_cd_12 as {{ dbt.type_string() }} ) as dual_stus_cd_12 
+    , cast(file_name as {{ dbt.type_string() }} ) as file_name 
+    , cast(ingest_datetime as {{ dbt.type_timestamp() }} ) as ingest_datetime 
 from {{ source('medicare_lds','master_beneficiary_summary') }}
