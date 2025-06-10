@@ -61,7 +61,8 @@ select
     , c.discharge_disposition_code
     , c.place_of_service_code
     , c.bill_type_code
-    , c.ms_drg_code
+    , c.ms_drg_code as drg_code
+    , case when c.ms_drg_code is not null then 'ms-drg' else null end as drg_code_type
     , c.apr_drg_code
     , c.revenue_center_code
     , c.service_unit_quantity
@@ -190,6 +191,7 @@ select
     , c.data_source
     , c.file_name
     , c.ingest_datetime
+    , cast(null as date ) as file_date
 from unioned as c
     inner join member_months as mm
         on c.person_id = mm.person_id

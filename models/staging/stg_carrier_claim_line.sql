@@ -1,6 +1,6 @@
 select
       desy_sort_key
-    , claim_no
+    , concat(claim_no,'|',regexp_substr(file_name, '20[0-9]{2}')) as claim_no
     , line_num
     , clm_thru_dt
     , nch_clm_type_cd
@@ -70,4 +70,5 @@ select
     , clm_next_gnrtn_aco_ind_cd5
     , file_name
     , ingest_datetime
+    , regexp_substr(file_name, '20[0-9]{2}') AS year_nbr
 from {{ source('medicare_lds','carrier_claim_line') }}
