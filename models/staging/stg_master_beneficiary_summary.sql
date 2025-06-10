@@ -80,4 +80,5 @@ select
     , dual_stus_cd_12
     , file_name
     , ingest_datetime
+    , regexp_substr(file_name, '20[0-9]{2}') AS year_nbr
 from {{ source('medicare_lds','master_beneficiary_summary') }}

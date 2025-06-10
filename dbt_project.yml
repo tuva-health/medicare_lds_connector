@@ -5,14 +5,14 @@ config-version: 2
 profile: default                   
 
 vars:
-  input_database: medicare_lds_five_percent
-  input_schema:  raw_data
+  input_database: medicare_lds_five_multi_year
+  input_schema:  raw
 
   claims_enabled: true
 
   # Default values for data marts, update as needed
-  cms_hcc_payment_year: 2021
-  quality_measures_period_end: "2020-12-31"
+  cms_hcc_payment_year: 2024
+  quality_measures_period_end: "2023-12-31"
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -25,3 +25,8 @@ target-path: "target"  # directory which will store compiled SQL files
 clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
+
+models:
+  the_tuva_project:
+    data_quality:
+      +enabled: false

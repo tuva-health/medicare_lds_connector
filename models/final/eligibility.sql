@@ -223,4 +223,7 @@ select
     , data_source
     , file_name
     , ingest_datetime
+    , cast(null as date ) as file_date
+    , cast(null as {{ dbt.type_string() }}) as group_id
+    , cast(null as {{ dbt.type_string() }}) as group_name
 from joined

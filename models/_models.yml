@@ -9,6 +9,8 @@ models:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_input_layer{% else %}input_layer{%- endif -%}
       materialized: table
+      tags: connector
+    
 
   - name: medical_claim
     description: Claim line details of all claim types
@@ -16,6 +18,17 @@ models:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_input_layer{% else %}input_layer{%- endif -%}
       materialized: table
+      tags: connector      
+    columns:
+      - name: claim_id
+        description: Unique identifier for a claim.
+      - name: line_number
+        description: Line number associated with the claim.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+           - claim_id
+           - claim_line_number      
 
   - name: pharmacy_claim
     description: Claim line details of all claim types
@@ -23,6 +36,7 @@ models:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_input_layer{% else %}input_layer{%- endif -%}
       materialized: table
+      tags: connector      
 
 ### intermediate
   - name: carrier_claim
@@ -30,12 +44,14 @@ models:
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
+      tags: connector
 
   - name: dme_claim
     description: Claim line details of durable medical equipment claims
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
+      tags: connector
 
   - name: eligibility_unpivot
     description: >
@@ -45,36 +61,42 @@ models:
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
+      tags: connector
 
   - name: home_health_claim
     description: Claim line details of home health claims
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
+      tags: connector
 
   - name: hospice_claim
     description: Claim line details of hospice claims
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
+      tags: connector
 
   - name: inpatient_claim
     description: Claim line details of inpatient claims
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
+      tags: connector
 
   - name: outpatient_claim
     description: Claim line details of outpatient claims
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
+      tags: connector
 
   - name: snf_claim
     description: Claim line details of skilled nursing facility claims
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_int_input_layer{% else %}_int_input_layer{%- endif -%}
+      tags: connector
 
 ### staging
   - name: stg_carrier_base_claim
@@ -82,87 +104,102 @@ models:
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_carrier_claim_line
     description: Staging carrier claim line
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_dme_base_claim
     description: Staging dme base claim
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_dme_claim_line
     description: Staging dme claim line
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_hha_base_claim
     description: Staging hha base claim
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_hha_revenue_center
     description: Staging hha revenue center
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_hospice_base_claim
     description: Staging hospice base claim
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_hospice_revenue_center
     description: Staging hospice revenue center
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_inpatient_base_claim
     description: Staging inpatient base claim
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_inpatient_revenue_center
     description: Staging inpatient revenue center
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_master_beneficiary_summary
     description: Staging master beneficiary summary
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_outpatient_base_claim
     description: Staging outpatient base claim
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_outpatient_revenue_center
     description: Staging outpatient revenue center
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_snf_base_claim
     description: Staging snf base claim
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector
 
   - name: stg_snf_revenue_center
     description: Staging snf revenue center
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}_{{var('tuva_schema_prefix')}}_stg_input_layer{% else %}_stg_input_layer{%- endif -%}
+      tags: connector

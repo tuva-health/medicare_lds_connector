@@ -1,6 +1,6 @@
 select
       desy_sort_key
-    , claim_no
+    , concat(claim_no,'|',regexp_substr(file_name, '20[0-9]{2}')) as claim_no
     , clm_line_num
     , clm_thru_dt
     , nch_clm_type_cd
@@ -28,4 +28,5 @@ select
     , thrpy_cap_ind_cd2
     , file_name
     , ingest_datetime
+    , regexp_substr(file_name, '20[0-9]{2}') AS year_nbr
 from {{ source('medicare_lds','hospice_revenue_center') }}

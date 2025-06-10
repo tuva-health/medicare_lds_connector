@@ -1,6 +1,6 @@
 select
       desy_sort_key
-    , claim_no
+    , concat(claim_no,'|',regexp_substr(file_name, '20[0-9]{2}')) as claim_no
     , prvdr_num
     , clm_thru_dt
     , nch_near_line_rec_ident_cd
@@ -190,7 +190,7 @@ select
     , icd_prcdr_cd25
     , prcdr_dt25
     , dob_dt
-    , gndr_cd
+    --,gndr_cd
     , bene_race_cd
     , bene_cnty_cd
     , bene_state_cd
@@ -230,4 +230,5 @@ select
     , aco_id_num
     , file_name
     , ingest_datetime
+    , regexp_substr(file_name, '20[0-9]{2}') AS year_nbr
 from {{ source('medicare_lds','inpatient_base_claim') }}
