@@ -1,0 +1,105 @@
+version: 2
+
+models:
+  - name: provider_org_crosswalk
+    description: Maps attributed providers to their top hospital organization by paid medical claims
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: provider_id
+        description: Provider NPI for the attributed provider
+      - name: attributed_hospital_npi
+        description: Hospital NPI with the highest total paid amount for the provider's panel
+      - name: provider_organization_name
+        description: Organization name from provider terminology for the attributed hospital NPI
+      - name: panel_hospital_claims
+        description: Count of claims billed by the attributed hospital for the provider's panel
+      - name: panel_hospital_paid
+        description: Total paid amount billed by the attributed hospital for the provider's panel
+
+  - name: unattributed_member_org_assignment
+    description: Assigns unattributed members to hospital organizations in their state so they can be included in PMPM denominators
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: person_id
+        description: Member identifier flagged as unattributed
+      - name: provider_id
+        description: Null placeholder because these members have no assigned provider
+      - name: state_abbrev
+        description: Two-letter state abbreviation used for assigning hospital organizations
+      - name: assigned_hospital_npi
+        description: Hospital NPI assigned to the unattributed member within their state
+      - name: assigned_hospital_name
+        description: Provider organization name for the assigned hospital NPI
+      - name: assignment_source
+        description: Flag indicating the assignment came from unattributed members with no claims history
+
+  - name: attributed_member_org_assignment
+    description: Maps attributed members to their assigned provider's top hospital organization
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: person_id
+        description: Member identifier with an assigned provider
+      - name: provider_id
+        description: Assigned provider NPI from current attribution
+      - name: state_abbrev
+        description: Two-letter state abbreviation derived from patient state when available
+      - name: assigned_hospital_npi
+        description: Hospital NPI from the provider-to-organization crosswalk
+      - name: assigned_hospital_name
+        description: Provider organization name for the assigned hospital NPI
+      - name: assignment_source
+        description: Flag indicating the assignment came from attributed members with claims history
+
+  - name: member_org_assignment
+    description: Combined mapping of all members (attributed and unattributed) to hospital organizations
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: person_id
+        description: Member identifier
+        tests:
+          - unique
+      - name: provider_id
+        description: Assigned provider NPI when available, otherwise null for unattributed members
+      - name: state_abbrev
+        description: Two-letter state abbreviation used for assignment
+      - name: assigned_hospital_npi
+        description: Hospital NPI assigned to the member
+      - name: assigned_hospital_name
+        description: Provider organization name for the assigned hospital NPI
+      - name: assignment_source
+        description: Indicates whether the row came from attributed or unattributed assignment
+
+  - name: org_pmpm
+    description: Calculates paid PMPM by assigned hospital organization using member-month denominators
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: assigned_hospital_npi
+        description: Assigned hospital NPI used to group PMPMs
+      - name: assigned_hospital_name
+        description: Provider organization name for the assigned hospital NPI
+      - name: total_paid
+        description: Total paid amount summed across members assigned to the organization
+      - name: total_member_months
+        description: Total member months for members assigned to the organization
+      - name: paid_pmpm
+        description: Paid PMPM (total_paid divided by total_member_months)
