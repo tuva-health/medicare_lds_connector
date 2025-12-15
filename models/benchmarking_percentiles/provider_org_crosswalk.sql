@@ -64,6 +64,7 @@ provider_hospital_util AS (
         ON mc.facility_id = facility_h.hospital_npi
     WHERE billing_h.hospital_npi IS NOT NULL
        OR facility_h.hospital_npi IS NOT NULL
+       
     GROUP BY
           pp.provider_id
         , COALESCE(facility_h.hospital_npi, billing_h.hospital_npi)

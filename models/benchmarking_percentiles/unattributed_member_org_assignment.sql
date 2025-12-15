@@ -1,9 +1,20 @@
-with unattributed as (
+with members_with_months as (
 
     select distinct
         person_id
-    from {{ ref('provider_attribution__assigned_beneficiaries_current') }}
-    where provider_id = '9999999999'
+    from {{ ref('core__member_months') }}
+
+)
+
+, unattributed as (
+
+    select distinct
+        mwm.person_id
+    from members_with_months as mwm
+        left join {{ ref('provider_attribution__assigned_beneficiaries_current') }} as pa
+            on mwm.person_id = pa.person_id
+    where pa.person_id is null
+        or pa.provider_id = '9999999999'
 
 )
 
@@ -58,19 +69,50 @@ with unattributed as (
 
 )
 
+, hospital_claim_counts as (
+
+    select
+          coalesce(facility_h.hospital_npi, billing_h.hospital_npi) as hospital_npi
+        , count(*) as claim_count
+    from {{ ref('core__medical_claim') }} as mc
+        left join hospital_orgs as billing_h
+            on mc.billing_id = billing_h.hospital_npi
+        left join hospital_orgs as facility_h
+            on mc.facility_id = facility_h.hospital_npi
+    where billing_h.hospital_npi is not null
+       or facility_h.hospital_npi is not null
+    group by coalesce(facility_h.hospital_npi, billing_h.hospital_npi)
+
+)
+
 , org_ranked as (
+
+    select
+          ho.state_abbrev
+        , ho.hospital_npi
+        , coalesce(hcc.claim_count, 0) as claim_count
+        , row_number() over (
+            partition by ho.state_abbrev
+            order by coalesce(hcc.claim_count, 0) desc, ho.hospital_npi
+          ) as org_rank
+    from hospital_orgs as ho
+        left join hospital_claim_counts as hcc
+            on ho.hospital_npi = hcc.hospital_npi
+
+)
+
+, top_orgs as (
 
     select
           state_abbrev
         , hospital_npi
-        , row_number() over (
-            partition by state_abbrev
-            order by hospital_npi
-          ) as org_rank
+        , claim_count
+        , org_rank
         , count(*) over (
             partition by state_abbrev
           ) as org_count
-    from hospital_orgs
+    from org_ranked
+    where org_rank <= 15
 
 )
 
@@ -98,7 +140,7 @@ with unattributed as (
             select distinct
                   state_abbrev
                 , org_count
-            from org_ranked
+            from top_orgs
         ) as o
             on o.state_abbrev = m.state_abbrev
 
@@ -112,7 +154,7 @@ select
     , p_hosp.provider_organization_name as assigned_hospital_name
     , 'unattributed_no_claims' as assignment_source
 from member_slots as ms
-    inner join org_ranked as o
+    inner join top_orgs as o
         on o.state_abbrev = ms.state_abbrev
         and o.org_rank = ms.assigned_org_rank
     left join {{ ref('terminology__provider') }} as p_hosp

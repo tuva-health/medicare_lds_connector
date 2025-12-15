@@ -99,7 +99,49 @@ models:
         description: Provider organization name for the assigned hospital NPI
       - name: total_paid
         description: Total paid amount summed across members assigned to the organization
+      - name: expected_paid_amount
+        description: Expected paid amount summed across members assigned to the organization (2023 predictions)
       - name: total_member_months
         description: Total member months for members assigned to the organization
       - name: paid_pmpm
         description: Paid PMPM (total_paid divided by total_member_months)
+      - name: expected_pmpm
+        description: Expected PMPM (expected_paid_amount divided by total_member_months)
+      - name: observed_to_expected
+        description: Observed-to-expected ratio (paid_pmpm divided by expected_pmpm)
+      - name: risk_adj_pmpm
+        description: Risk-adjusted paid PMPM (observed_to_expected multiplied by the population PMPM across orgs with >=1000 person-years)
+
+  - name: org_pmpm_percentiles
+    description: Percentiles (1-99) of paid PMPM and risk-adjusted PMPM across orgs in org_pmpm
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: percentile
+        description: Percentile number (1-99)
+      - name: paid_pmpm
+        description: Paid PMPM at the given percentile
+      - name: risk_adj_pmpm
+        description: Risk-adjusted paid PMPM at the given percentile
+
+  - name: org_pmpm_percentiles_pct_of_median
+    description: Paid PMPM and risk-adjusted PMPM ratios to the median (50th percentile) at each percentile
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: percentile
+        description: Percentile number (1-99)
+      - name: paid_pmpm
+        description: Paid PMPM at the given percentile
+      - name: risk_adj_pmpm
+        description: Risk-adjusted paid PMPM at the given percentile
+      - name: paid_pmpm_pct_of_median
+        description: paid_pmpm divided by the 50th percentile paid_pmpm
+      - name: risk_adj_pmpm_pct_of_median
+        description: risk_adj_pmpm divided by the 50th percentile risk_adj_pmpm
