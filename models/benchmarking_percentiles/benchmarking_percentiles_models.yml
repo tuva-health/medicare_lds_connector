@@ -113,7 +113,7 @@ models:
         description: Risk-adjusted paid PMPM (observed_to_expected multiplied by the population PMPM across orgs with >=1000 person-years)
 
   - name: org_pmpm_percentiles
-    description: Percentiles (1-99) of paid PMPM and risk-adjusted PMPM across orgs in org_pmpm
+    description: Selected percentiles (default 10/25/50/75/90) of paid PMPM and risk-adjusted PMPM across orgs in org_pmpm
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
@@ -128,7 +128,7 @@ models:
         description: Risk-adjusted paid PMPM at the given percentile
 
   - name: org_pmpm_percentiles_pct_of_median
-    description: Paid PMPM and risk-adjusted PMPM ratios to the median (50th percentile) at each percentile
+    description: Paid PMPM and risk-adjusted PMPM ratios to the median (50th percentile) at each selected percentile (default 10/25/50/75/90)
     config:
       schema: |
         {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
@@ -145,3 +145,257 @@ models:
         description: paid_pmpm divided by the 50th percentile paid_pmpm
       - name: risk_adj_pmpm_pct_of_median
         description: risk_adj_pmpm divided by the 50th percentile risk_adj_pmpm
+
+  - name: org_expected_values
+    description: |
+      Organization-level expected value metrics (amounts and encounter counts) averaged per member month across orgs with >=1000 person-years.
+      Includes all `expected_*` columns from `benchmarks__predict_member_month`.
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: assigned_hospital_npi
+        description: Assigned hospital NPI used to group metrics
+      - name: assigned_hospital_name
+        description: Provider organization name for the assigned hospital NPI
+      - name: total_member_months
+        description: Total member months for members assigned to the organization (2023)
+      - name: total_person_years
+        description: Total person years (total_member_months divided by 12)
+
+  - name: org_expected_values_percentiles
+    description: Selected percentiles (default 10/25/50/75/90) for each expected value metric across orgs in org_expected_values
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: metric_name
+        description: Name of the expected metric (an `expected_*` column from `benchmarks__predict_member_month`)
+      - name: percentile
+        description: Percentile number (1-99)
+      - name: metric_value
+        description: Metric value at the given percentile (per member month)
+
+  - name: org_expected_values_percentiles_pct_of_median
+    description: For each expected value metric, selected percentiles (default 10/25/50/75/90) expressed as a ratio to the median (50th percentile)
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: metric_name
+        description: Name of the expected metric (an `expected_*` column from `benchmarks__predict_member_month`)
+      - name: percentile
+        description: Percentile number (1-99)
+      - name: metric_value
+        description: Metric value at the given percentile (per member month)
+      - name: pct_of_median
+        description: metric_value divided by the 50th percentile metric_value for the metric
+
+  - name: org_encounter_group_metrics
+    description: |
+      Organization-level encounter group metrics (amounts + encounter counts) including actual, expected, observed-to-expected, and risk-adjusted values
+      across orgs with >=1000 person-years (2023).
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: assigned_hospital_npi
+        description: Assigned hospital NPI used to group metrics
+      - name: assigned_hospital_name
+        description: Provider organization name for the assigned hospital NPI
+      - name: total_member_months
+        description: Total member months for members assigned to the organization (2023)
+      - name: total_person_years
+        description: Total person years (total_member_months divided by 12)
+      - name: actual_paid_amount_pmpm
+        description: Actual total paid amount PMPM (encounter group rollup)
+      - name: expected_paid_amount_pmpm
+        description: Expected total paid amount PMPM (encounter group rollup)
+      - name: observed_to_expected_paid_amount
+        description: Observed-to-expected ratio for paid amount (actual_paid_amount_pmpm divided by expected_paid_amount_pmpm)
+      - name: risk_adj_paid_amount_pmpm
+        description: Risk-adjusted paid amount PMPM (observed_to_expected_paid_amount multiplied by the population paid amount PMPM)
+      - name: actual_inpatient_paid_amount_pmpm
+        description: Actual inpatient paid amount PMPM
+      - name: expected_inpatient_paid_amount_pmpm
+        description: Expected inpatient paid amount PMPM
+      - name: observed_to_expected_inpatient_paid_amount
+        description: Observed-to-expected ratio for inpatient paid amount
+      - name: risk_adj_inpatient_paid_amount_pmpm
+        description: Risk-adjusted inpatient paid amount PMPM
+      - name: actual_outpatient_paid_amount_pmpm
+        description: Actual outpatient paid amount PMPM
+      - name: expected_outpatient_paid_amount_pmpm
+        description: Expected outpatient paid amount PMPM
+      - name: observed_to_expected_outpatient_paid_amount
+        description: Observed-to-expected ratio for outpatient paid amount
+      - name: risk_adj_outpatient_paid_amount_pmpm
+        description: Risk-adjusted outpatient paid amount PMPM
+      - name: actual_office_based_paid_amount_pmpm
+        description: Actual office based paid amount PMPM
+      - name: expected_office_based_paid_amount_pmpm
+        description: Expected office based paid amount PMPM
+      - name: observed_to_expected_office_based_paid_amount
+        description: Observed-to-expected ratio for office based paid amount
+      - name: risk_adj_office_based_paid_amount_pmpm
+        description: Risk-adjusted office based paid amount PMPM
+      - name: actual_other_paid_amount_pmpm
+        description: Actual other paid amount PMPM
+      - name: expected_other_paid_amount_pmpm
+        description: Expected other paid amount PMPM
+      - name: observed_to_expected_other_paid_amount
+        description: Observed-to-expected ratio for other paid amount
+      - name: risk_adj_other_paid_amount_pmpm
+        description: Risk-adjusted other paid amount PMPM
+      - name: actual_inpatient_encounter_count_per_mm
+        description: Actual inpatient encounter count per member month
+      - name: expected_inpatient_encounter_count_per_mm
+        description: Expected inpatient encounter count per member month
+      - name: observed_to_expected_inpatient_encounter_count
+        description: Observed-to-expected ratio for inpatient encounter count
+      - name: risk_adj_inpatient_encounter_count_per_mm
+        description: Risk-adjusted inpatient encounter count per member month
+      - name: actual_outpatient_encounter_count_per_mm
+        description: Actual outpatient encounter count per member month
+      - name: expected_outpatient_encounter_count_per_mm
+        description: Expected outpatient encounter count per member month
+      - name: observed_to_expected_outpatient_encounter_count
+        description: Observed-to-expected ratio for outpatient encounter count
+      - name: risk_adj_outpatient_encounter_count_per_mm
+        description: Risk-adjusted outpatient encounter count per member month
+      - name: actual_office_based_encounter_count_per_mm
+        description: Actual office based encounter count per member month
+      - name: expected_office_based_encounter_count_per_mm
+        description: Expected office based encounter count per member month
+      - name: observed_to_expected_office_based_encounter_count
+        description: Observed-to-expected ratio for office based encounter count
+      - name: risk_adj_office_based_encounter_count_per_mm
+        description: Risk-adjusted office based encounter count per member month
+      - name: actual_other_encounter_count_per_mm
+        description: Actual other encounter count per member month
+      - name: expected_other_encounter_count_per_mm
+        description: Expected other encounter count per member month
+      - name: observed_to_expected_other_encounter_count
+        description: Observed-to-expected ratio for other encounter count
+      - name: risk_adj_other_encounter_count_per_mm
+        description: Risk-adjusted other encounter count per member month
+
+  - name: org_encounter_group_metrics_percentiles
+    description: Selected percentiles (default 10/25/50/75/90) for each encounter group metric (actual and risk-adjusted) across orgs in org_encounter_group_metrics
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: metric_name
+        description: Metric identifier (e.g. paid_amount_pmpm, inpatient_encounter_count_per_mm)
+      - name: value_type
+        description: Whether the value is `actual` or `risk_adj`
+      - name: percentile
+        description: Percentile number (1-99)
+      - name: metric_value
+        description: Metric value at the given percentile
+
+  - name: org_encounter_group_metrics_percentiles_pct_of_median
+    description: Encounter group selected percentiles (default 10/25/50/75/90) expressed as a ratio to the median (50th percentile), for both actual and risk-adjusted values
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: metric_name
+        description: Metric identifier (e.g. paid_amount_pmpm, inpatient_encounter_count_per_mm)
+      - name: value_type
+        description: Whether the value is `actual` or `risk_adj`
+      - name: percentile
+        description: Percentile number (1-99)
+      - name: metric_value
+        description: Metric value at the given percentile
+      - name: pct_of_median
+        description: metric_value divided by the 50th percentile metric_value for the metric/value_type
+
+  - name: org_encounter_type_metrics
+    description: |
+      Organization-level encounter type metrics (amounts + encounter counts) including actual, expected, observed-to-expected, and risk-adjusted values
+      across orgs with >=1000 person-years (2023).
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: assigned_hospital_npi
+        description: Assigned hospital NPI used to group metrics
+      - name: assigned_hospital_name
+        description: Provider organization name for the assigned hospital NPI
+      - name: total_member_months
+        description: Total member months for members assigned to the organization (2023)
+      - name: total_person_years
+        description: Total person years (total_member_months divided by 12)
+
+  - name: org_encounter_type_metrics_percentiles
+    description: Selected percentiles (default 10/25/50/75/90) for each encounter type metric (actual and risk-adjusted) across orgs in org_encounter_type_metrics
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: metric_name
+        description: Metric identifier (derived from `benchmarks__predict_member_month` encounter type columns)
+      - name: value_type
+        description: Whether the value is `actual` or `risk_adj`
+      - name: percentile
+        description: Percentile number (driven by `benchmarking_percentiles_percentiles` var)
+      - name: metric_value
+        description: Metric value at the given percentile
+
+  - name: org_encounter_type_metrics_percentiles_pct_of_median
+    description: Encounter type selected percentiles expressed as a ratio to the median (50th percentile), for both actual and risk-adjusted values
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: metric_name
+        description: Metric identifier (derived from `benchmarks__predict_member_month` encounter type columns)
+      - name: value_type
+        description: Whether the value is `actual` or `risk_adj`
+      - name: percentile
+        description: Percentile number (driven by `benchmarking_percentiles_percentiles` var)
+      - name: metric_value
+        description: Metric value at the given percentile
+      - name: pct_of_median
+        description: metric_value divided by the 50th percentile metric_value for the metric/value_type
+
+  - name: org_all_metrics_percentiles_pct_of_median
+    description: Unioned output of PMPM, encounter-group, and encounter-type percentile values plus percent-of-median in a single long table
+    config:
+      schema: |
+        {%- if var('tuva_schema_prefix',None) != None -%}{{var('tuva_schema_prefix')}}_benchmarking_percentiles{% else %}benchmarking_percentiles{%- endif -%}
+      materialized: table
+      tags: [benchmarking_percentiles]
+    columns:
+      - name: metric_group
+        description: One of `pmpm`, `encounter_group`, or `encounter_type`
+      - name: metric_name
+        description: Metric identifier within the group (for PMPM this is `paid_pmpm`)
+      - name: value_type
+        description: Whether the value is `actual` or `risk_adj`
+      - name: percentile
+        description: Percentile number (driven by `benchmarking_percentiles_percentiles` var)
+      - name: metric_value
+        description: Metric value at the given percentile
+      - name: pct_of_median
+        description: metric_value divided by the 50th percentile metric_value for the metric/value_type

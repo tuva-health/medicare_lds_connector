@@ -12,7 +12,8 @@ with org_pmpm as (
 select *
 from (
 
-    {% for p in range(1, 100) %}
+    {% set percentiles = var('benchmarking_percentiles_percentiles', [10, 25, 50, 75, 90]) %}
+    {% for p in percentiles %}
     select distinct
           {{ p }} as percentile
         , percentile_cont({{ p / 100 }}) within group (order by paid_pmpm) over () as paid_pmpm
